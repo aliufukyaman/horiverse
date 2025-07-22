@@ -1,14 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-  <title>Horiverse</title>
-  <meta charset="UTF-8" />
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horiverse - Mobil Oyun Stüdyosu</title>
+  <meta name="description" content="Horiverse, yenilikçi ve eğlenceli mobil oyunlar geliştiren bir oyun stüdyosudur.">
+  
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <h1>Welcome to Horiverse!</h1>
-  <p>Exciting things are coming soon...</p>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-container">
+      <a href="#" class="logo">Hori<span>verse</span></a>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="#" class="scroll-link">Home</a></li>
+          <li><a href="#games" class="scroll-link">Games</a></li>
+          <li><a href="#about" class="scroll-link">About</a></li>
+          <li><a href="#contact" class="scroll-link">Contact</a></li>
+          <li class="language-selector">
+            <a href="#" class="current-lang">EN</a>
+            <ul class="language-dropdown">
+              <li><a href="#" class="lang-option">EN</a></li>
+              <li><a href="#" class="lang-option">TR</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to Mobile Gaming World</h1>
+      <p>At Horiverse, we develop fun and innovative mobile games. We aim to reach millions of people with our games.</p>
+      <a href="#games" class="btn scroll-link">Discover Our Games</a>
+    </div>
+  </section>
+
+  <!-- Games Section -->
+  <section id="games" class="games">
+    <div class="container">
+      <div class="section-title">
+        <h2>Our Games</h2>
+        <p>Discover our most popular mobile games and download them now!</p>
+      </div>
+      <div class="games-grid" style="max-width: 800px; margin: 0 auto;">
+
+        <!-- Game 1 - Horiku -->
+        <div class="game-card featured-game">
+          <div class="game-img">
+            <img src="assets/images/horiku_game.png" alt="Horiku Game Screenshot">
+          </div>
+          <div class="game-info">
+            <div class="game-logo">
+              <img src="assets/images/horiku_logo.png" alt="Horiku Logo" style="max-height: 80px; margin-bottom: 15px;">
+            </div>
+            <p>A challenging number puzzle game that tests your logic and strategic thinking.</p>
+            <div class="store-links">
+              <a href="#" class="store-link"><i class="fab fa-google-play"></i> Google Play</a>
+              <a href="#" class="store-link"><i class="fab fa-apple"></i> App Store</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Game 2 -->
+        <div class="game-card">
+          <div class="game-img">
+            <img src="assets/images/horiblock_game.png" alt="Horiblock">
+          </div>
+          <div class="game-info">
+            <h3>Horiblock</h3>
+            <p>Block the falling blocks and clear the lines.</p>
+            <p>Booomm!.</p>
+            <div class="store-links">
+              <a href="#" class="store-link"><i class="fab fa-google-play"></i> Google Play</a>
+              <a href="#" class="store-link"><i class="fab fa-apple"></i> App Store</a>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-text">
+          <h2>Hakkımızda</h2>
+          <p>Horiverse, 2025 yılında kurulmuş yenilikçi bir mobil oyun stüdyosudur. Amacımız, kullanıcılarımıza eğlenceli ve bağımlılık yapan oyun deneyimleri sunmaktır.</p>
+          <p>Ekibimiz, oyun geliştirme konusunda uzman ve tutkulu profesyonellerden oluşmaktadır. Her projemizde en yüksek kaliteyi ve kullanıcı memnuniyetini hedefliyoruz.</p>
+          <a href="#contact" class="btn scroll-link">Bizimle İletişime Geçin</a>
+        </div>
+        <div class="about-img">
+          <img src="https://via.placeholder.com/600x400" alt="Horiverse Ekibi">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <div class="section-title">
+        <h2>İletişim</h2>
+        <p>Sorularınız mı var? Bizimle iletişime geçin!</p>
+      </div>
+      <div class="contact-content">
+        <div class="contact-info">
+          <h3>İletişim Bilgileri</h3>
+          <p>Bize e-posta gönderin veya sosyal medya hesaplarımızdan takip edin.</p>
+          <p><i class="fas fa-envelope"></i> auyaman@gmail.com</p>
+          <p><i class="fas fa-map-marker-alt"></i> Istanbul, Turkey</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="contact-form">
+          <form action="#" method="POST">
+            <div class="form-group">
+              <label for="name">Adınız</label>
+              <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="email">E-posta Adresiniz</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="message">Mesajınız</label>
+              <textarea id="message" name="message" required></textarea>
+            </div>
+            <button type="submit" class="btn">Gönder</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">Hori<span>verse</span></div>
+        <ul class="footer-links">
+          <li><a href="#" class="scroll-link">Ana Sayfa</a></li>
+          <li><a href="#games" class="scroll-link">Oyunlarımız</a></li>
+          <li><a href="#about" class="scroll-link">Hakkımızda</a></li>
+          <li><a href="#contact" class="scroll-link">İletişim</a></li>
+        </ul>
+        <p class="copyright">&copy; 2023 Horiverse. Tüm hakları saklıdır.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Custom JS -->
+  <script src="assets/js/main.js"></script>
 </body>
 </html>

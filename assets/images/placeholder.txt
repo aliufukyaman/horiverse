@@ -1,0 +1,10 @@
+Bu klasöre aşağıdaki görselleri ekleyebilirsiniz:
+
+1. hero-bg.jpg - Ana sayfa arka plan görseli
+2. game1.jpg - Birinci oyun görseli
+3. game2.jpg - İkinci oyun görseli
+4. game3.jpg - Üçüncü oyun görseli
+5. about.jpg - Hakkımızda bölümü görseli
+6. logo.png - Şirket logosu
+
+Not: Gerçek görselleri eklemek için bu dosyayı silebilirsiniz.
