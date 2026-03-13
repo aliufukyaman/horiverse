@@ -218,10 +218,10 @@
   <div class="login-box">
     <div class="login-logo">Hori<span>verse</span></div>
     <div class="login-subtitle">Admin Panel · PUBG Stats</div>
-    <input type="text" id="login-user" placeholder="Kullanıcı adı" autocomplete="username">
-    <input type="password" id="login-pass" placeholder="Şifre" autocomplete="current-password">
-    <button class="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Giriş</button>
-    <div id="login-error">Kullanıcı adı veya şifre hatalı.</div>
+    <input type="text" id="login-user" placeholder="Username" autocomplete="username">
+    <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Login</button>
+    <div id="login-error">Invalid username or password.</div>
   </div>
 </div>
 
@@ -231,16 +231,16 @@
     <div class="topbar-logo">Hori<span>verse</span></div>
     <div class="topbar-right">
       <span class="topbar-tag"><i class="fas fa-gamepad"></i> PUBG Stats</span>
-      <button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Çıkış</button>
+      <button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
   </div>
 
   <div class="main-wrap">
 
     <!-- OVERALL -->
-    <div class="section-title"><i class="fas fa-chart-bar"></i> Genel İstatistikler</div>
+    <div class="section-title"><i class="fas fa-chart-bar"></i> Overall Statistics</div>
     <div class="overall-grid" id="overall-grid">
-      <div class="stat-card"><div class="label">Yükleniyor...</div></div>
+      <div class="stat-card"><div class="label">Loading...</div></div>
     </div>
 
     <!-- GAME DAYS -->
@@ -248,15 +248,15 @@
     <div class="panel-row">
       <div class="panel-left">
         <div class="panel-left-header">
-          <h3>Game Day Listesi</h3>
-          <button class="add-day-btn" onclick="newGameDay()"><i class="fas fa-plus"></i> Yeni</button>
+          <h3>Game Day List</h3>
+          <button class="add-day-btn" onclick="newGameDay()"><i class="fas fa-plus"></i> New</button>
         </div>
         <div class="game-day-list" id="gd-list"></div>
       </div>
       <div class="panel-right" id="detail-panel">
         <div class="empty-state">
           <i class="fas fa-hand-pointer"></i>
-          <div>Bir Game Day seçin ya da yeni ekleyin</div>
+          <div>Select a Game Day or add a new one</div>
         </div>
       </div>
     </div>
@@ -333,11 +333,11 @@ function renderOverall(o) {
   const kl = parseComp(o.kill_comparison);
 
   const cards = [
-    { label:'Toplam Oyun', value: o.total_games_played || 0, cls:'', sub: '' },
-    { label:'Toplam Galibiyet', value: o.total_wins || 0, cls:'green-card', sub: 'Win rate: ' + (o.win_rate || '—') },
-    { label:'Top 3 Bitiş', value: o.total_top3 || 0, cls:'', sub: 'Top3 rate: ' + (o.top3_rate || '—') },
-    { label:'Hori Total Kill', value: o.hori_total_kills || 0, cls:'hori-card', sub: 'Avg/game: ' + (o.hori_kill_avg || '—') },
-    { label:'Tami Total Kill', value: o.tami_total_kills || 0, cls:'tami-card', sub: 'Avg/game: ' + (o.tami_kill_avg || '—') },
+    { label:'Total Games', value: o.total_games_played || 0, cls:'', sub: '' },
+    { label:'Total Wins', value: o.total_wins || 0, cls:'green-card', sub: 'Win rate: ' + (o.win_rate || '—') },
+    { label:'Top 3 Finishes', value: o.total_top3 || 0, cls:'', sub: 'Top3 rate: ' + (o.top3_rate || '—') },
+    { label:'Hori Total Kills', value: o.hori_total_kills || 0, cls:'hori-card', sub: `Avg: ${o.hori_kill_avg || '—'} · Max: ${o.hori_max_kill ?? '—'}` },
+    { label:'Tami Total Kills', value: o.tami_total_kills || 0, cls:'tami-card', sub: `Avg: ${o.tami_kill_avg || '—'} · Max: ${o.tami_max_kill ?? '—'}` },
     {
       label:'Damage (Hori)', value: o.hori_damage_max || 0, cls:'hori-card',
       sub: 'Max single game', extra: `Mean/Median: ${o.hori_damage_mean_median || '—'}`
@@ -356,9 +356,9 @@ function renderOverall(o) {
       sub: `Hori kill üstün`, extra: `T: %${kl[2]} | Eq: %${kl[1]}`,
       bar: kl
     },
-    { label:'En İyi Takım Kill', value: o.team_total_kill_best || '—', cls:'', sub: '' },
-    { label:'En İyi Takım Avg Dmg', value: o.team_avg_damage_best || '—', cls:'', sub: '' },
-    { label:'En İyi Takım Score', value: o.team_avg_score_best || '—', cls:'', sub: '' },
+    { label:'Best Team Kill Day', value: o.team_total_kill_best || '—', cls:'', sub: '' },
+    { label:'Best Team Avg Damage Day', value: o.team_avg_damage_best || '—', cls:'', sub: '' },
+    { label:'Best Team Score Day', value: o.team_avg_score_best || '—', cls:'', sub: '' },
     { label:'Hori Best Game', value: o.hori_best_game || '—', cls:'hori-card', sub: '' },
     { label:'Tami Best Game', value: o.tami_best_game || '—', cls:'tami-card', sub: '' },
     { label:'Best Game Ever', value: o.best_game_ever || '—', cls:'green-card', sub: '' },
@@ -383,7 +383,7 @@ function renderOverall(o) {
 function renderGDList(gds) {
   const el = document.getElementById('gd-list');
   if (!gds || !gds.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:30px"><i class="fas fa-inbox"></i><div>Henüz kayıt yok</div></div>';
+    el.innerHTML = '<div class="empty-state" style="padding:30px"><i class="fas fa-inbox"></i><div>No records yet</div></div>';
     return;
   }
   el.innerHTML = gds.map(gd => {
@@ -435,7 +435,7 @@ function newGameDay() {
 // ─── RENDER DETAIL ───────────────────────────────────
 function renderDetail() {
   const el = document.getElementById('detail-panel');
-  if (!selectedGD) { el.innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Bir Game Day seçin</div></div>'; return; }
+  if (!selectedGD) { el.innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>'; return; }
 
   const gd = selectedGD;
   const em = editMode;
@@ -461,10 +461,10 @@ function renderDetail() {
       <h3>Game Day ${gd.game_no}</h3>
       <div class="detail-actions">
         ${em ? `
-          <button class="btn-save" onclick="saveGD()"><i class="fas fa-check"></i> Kaydet</button>
-          <button class="btn-cancel" onclick="cancelEdit()"><i class="fas fa-times"></i> İptal</button>
+          <button class="btn-save" onclick="saveGD()"><i class="fas fa-check"></i> Save</button>
+          <button class="btn-cancel" onclick="cancelEdit()"><i class="fas fa-times"></i> Cancel</button>
         ` : `
-          <button class="btn-edit" onclick="startEdit()"><i class="fas fa-pen"></i> Düzenle</button>
+          <button class="btn-edit" onclick="startEdit()"><i class="fas fa-pen"></i> Edit</button>
           ${!isNew ? `<button class="btn-delete" onclick="deleteGD()"><i class="fas fa-trash"></i></button>` : ''}
         `}
       </div>
@@ -476,12 +476,12 @@ function renderDetail() {
           ${em ? `<input type="number" id="meta-gno" value="${gd.game_no}" style="width:80px">` : `<strong>${gd.game_no}</strong>`}
         </div>
         <div>
-          <label>Tarih</label>
+          <label>Date</label>
           ${em ? `<input type="text" id="meta-date" value="${gd.date || ''}" placeholder="dd.mm.yyyy" style="width:120px">` : `<strong>${gd.date || '—'}</strong>`}
         </div>
         <div>
-          <label>En İyi Oyun</label>
-          ${em ? `<input type="text" id="meta-best" value="${gd.best_game || ''}" placeholder="Game on X. row" style="width:180px">` : `<strong>${gd.best_game || '—'}</strong>`}
+          <label>Best Game</label>
+          ${em ? `<input type="text" id="meta-best" value="${gd.best_game || ''}" placeholder="Game 7" style="width:180px">` : `<strong>${gd.best_game || '—'}</strong>`}
         </div>
       </div>
 
@@ -543,11 +543,11 @@ function renderDaySummary(gd) {
   return `
     <div class="day-summary">
       <div class="day-stat">
-        <div class="ds-label">Hori Kill Toplamı</div>
+        <div class="ds-label">Hori Total Kills</div>
         <div class="ds-val" style="color:var(--hori)">${t.hori_kill !== undefined ? t.hori_kill : '—'}</div>
       </div>
       <div class="day-stat">
-        <div class="ds-label">Tami Kill Toplamı</div>
+        <div class="ds-label">Tami Total Kills</div>
         <div class="ds-val" style="color:var(--tami)">${t.tami_kill !== undefined ? t.tami_kill : '—'}</div>
       </div>
       <div class="day-stat">
@@ -559,16 +559,16 @@ function renderDaySummary(gd) {
         <div class="ds-val" style="color:var(--tami)">${t.tami_damage !== undefined ? Number(t.tami_damage).toFixed(1) : '—'}</div>
       </div>
       <div class="day-stat">
-        <div class="ds-label">Galibiyet</div>
+        <div class="ds-label">Wins</div>
         <div class="ds-val" style="color:var(--green)">${wins}</div>
         <div class="ds-sub">Top3: ${top3}</div>
       </div>
       <div class="day-stat">
-        <div class="ds-label">Ort. Rank</div>
+        <div class="ds-label">Avg Rank</div>
         <div class="ds-val">${avgRank.toFixed(1)}</div>
       </div>
       <div class="day-stat">
-        <div class="ds-label">Takım Score</div>
+        <div class="ds-label">Team Score</div>
         <div class="ds-val" style="color:var(--gold)">${t.score !== undefined ? Number(t.score).toFixed(4) : '—'}</div>
       </div>
     </div>
@@ -614,31 +614,31 @@ async function saveGD() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'save_game_day', game_day })
     });
-    if (!r.ok) { showToast('Kayıt başarısız', true); return; }
+    if (!r.ok) { showToast('Save failed', true); return; }
     const result = await r.json();
     selectedGD = game_day;
     editMode = false;
     isNew = false;
     await loadStats();
     selectGD(game_day.game_no);
-    showToast('Game Day kaydedildi!');
-  } catch { showToast('Hata oluştu', true); }
+    showToast('Game Day saved!');
+  } catch { showToast('An error occurred', true); }
 }
 
 async function deleteGD() {
-  if (!confirm(`Game Day ${selectedGD.game_no} silinsin mi?`)) return;
+  if (!confirm(`Delete Game Day ${selectedGD.game_no}?`)) return;
   try {
     const r = await fetch('/api/stats', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'delete_game_day', game_day: { game_no: selectedGD.game_no } })
     });
-    if (!r.ok) { showToast('Silinemedi', true); return; }
+    if (!r.ok) { showToast('Delete failed', true); return; }
     selectedGD = null;
     await loadStats();
-    document.getElementById('detail-panel').innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Bir Game Day seçin</div></div>';
-    showToast('Game Day silindi');
-  } catch { showToast('Hata oluştu', true); }
+    document.getElementById('detail-panel').innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>';
+    showToast('Game Day deleted');
+  } catch { showToast('An error occurred', true); }
 }
 
 // ─── TOAST ───────────────────────────────────────────
