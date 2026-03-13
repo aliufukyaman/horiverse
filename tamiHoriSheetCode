@@ -1,0 +1,298 @@
+function onEdit(e) {
+
+  const sheet = e.source.getActiveSheet();
+  const range = e.range;
+
+
+  // Only execute if the sheet name is "Sheet1"
+  if (sheet.getName() !== "Sheet1") return;
+
+  let hpComp = calculateHPComparision();
+  sheet.getRange("M27").setValue(`H: %${hpComp[0].toFixed(1)}, Eq:%${hpComp[1].toFixed(1)}, T: %${hpComp[2].toFixed(1)}`);
+
+  let killComp = calculateKillComparision();
+  sheet.getRange("M29").setValue(`H: %${killComp[0].toFixed(1)}, Eq:%${killComp[1].toFixed(1)}, T: %${killComp[2].toFixed(1)}`);
+
+  let totalKills = getTotalKillsSoFar();
+  sheet.getRange("M4").setValue(totalKills[0]);
+  sheet.getRange("N4").setValue(totalKills[1]);
+
+  let teamBests = getTeamBests();
+  sheet.getRange("M32").setValue(`${teamBests[0][0]}, Ind: ${teamBests[0][1]}`);
+  sheet.getRange("N32").setValue(`${teamBests[1][0]}, Ind: ${teamBests[1][1]}`);
+  sheet.getRange("M34").setValue(`${teamBests[2][0]}, Ind: ${teamBests[2][1]}`);
+  sheet.getRange("N34").setValue(`${teamBests[3][0]}, Ind: ${teamBests[3][1]}`);
+
+  // Get the edited cell's row and column
+  const editedRow = e.range.getRow();
+  const editedColumn = e.range.getColumn();
+
+  // Check if the edited row is between 4 and 13 and the column is B (2) or D (4)
+  if (editedRow >= 4 && editedRow <= 13 && (editedColumn === 2 || editedColumn === 4)) {
+    // Call the generic method to calculate the sum of the 10 rows above the edited cell
+    getAbove10Total(editedRow, editedColumn, sheet);
+  }
+}
+
+function getAbove10Total(rownIndex, columnIndex, sheet) {
+  // Define the range (10 rows above the current cell)
+  const rangeToSum = sheet.getRange(4, columnIndex, 10, 1); // From row 4 to row 13 (10 rows)
+
+  // Get the values from the defined range
+  const values = rangeToSum.getValues();
+
+  // Calculate the sum, ignoring non-numeric values
+  const total = values.reduce((sum, row) => {
+    const value = row[0]; // Each row is an array with one element
+    return typeof value === "number" ? sum + value : sum;
+  }, 0);
+
+  // Write the total to the corresponding row 14 in the target column
+  sheet.getRange(14, columnIndex).setValue(total);
+}
+
+
+function onEditu(e) {
+  // Tetikleyici parametresinden gelen edit bilgilerini al
+  const sheet = e.range.getSheet(); // Değişiklik yapılan sayfa
+  
+  // Çalışma sayfasının adı (gerekiyorsa kontrol eklenebilir)
+  if (sheet.getName() !== "Sheet1") return; // "Sheet1" yerine kendi sayfa adını koy
+  
+  // A2:G2 aralığında bir değişiklik olup olmadığını kontrol et
+  const range = e.range;
+  const editedRow = range.getRow();
+  const editedColumn = range.getColumn();
+  
+  if (editedRow === 2 && editedColumn >= 1 && editedColumn <= 7) {
+    // A2:G2 arasındaki verileri oku
+    const rangeToAverage = sheet.getRange("A2:G2");
+    const values = rangeToAverage.getValues()[0]; // Tek satır olduğu için [0] alıyoruz
+    
+    // Geçerli sayıların ortalamasını hesapla
+    const validNumbers = values.filter(value => typeof value === "number");
+    const average = validNumbers.length > 0 
+      ? validNumbers.reduce((sum, val) => sum + val, 0) / validNumbers.length 
+      : 0; // Eğer sayı yoksa 0 döndür
+    
+    // Sonucu K26 hücresine yazdır
+    sheet.getRange("K26").setValue(average);
+  }
+}
+
+
+function createHistogram(cell) {
+  const sheet = cell.getSheet();
+  
+  // Define the data range for the histogram
+  const dataRange = sheet.getRange('I4:I25');
+  
+  // Create the histogram chart
+  const chart = sheet.newChart()
+    .setChartType(Charts.ChartType.COLUMN)
+    .addRange(dataRange)
+    .setOption('histogram', {bucketSize: 0.1}) // Set the bucket size
+    .setPosition(cell.getRow(), cell.getColumn(), 0, 0) // Position the chart on the edited cell
+    .setOption('height', 150) // Set the chart height (optional)
+    .setOption('width', 150) // Set the chart width (optional)
+    .build();
+  
+  // Expand the chart's size to occupy 3 columns and 3 rows
+  const newWidth = 150 * 3; // 3 columns wide
+  const newHeight = 150 * 3; // 3 rows high
+  
+  chart.setOption('width', newWidth);
+  chart.setOption('height', newHeight);
+  
+  // Insert the chart into the sheet
+  sheet.insertChart(chart);
+}
+
+
+function isNumeric(value) {
+  return !isNaN(value) && typeof value === "number";
+}
+
+function calculateHPComparision() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  const cColumn = data.map(row => row[2]);
+  const eColumn = data.map(row => row[4]);
+
+  let rowsToCalculate = getRangeIndexes()
+  let validPairs = 0;
+  let cGreaterThanE = 0;
+  let cEqualE = 0;
+
+  let minVal = 0;
+  let maxVal = 2000;
+
+  for (let i = 0; i < rowsToCalculate.length; i++) {
+    const cValue = cColumn[rowsToCalculate[i]];
+    const eValue = eColumn[rowsToCalculate[i]];
+    if (
+      (isNumeric(cValue) && isNumeric(eValue))
+    ) {
+      validPairs++;
+      //Logger.log(`Valid -> No:${rowsToCalculate[i]+1}, Hori: ${cValue}, Tami: ${eValue}`);
+      if (cValue > eValue) {
+        cGreaterThanE++;
+      }
+      if (cValue == eValue){
+        cEqualE++;
+      }
+    }
+    else {
+      //Logger.log(`Invalid -> No:${rowsToCalculate[i]+1}, Hori: ${cValue}, Tami: ${eValue}`);
+    }
+  }
+  if (validPairs > 0){
+    const percentageHori = (cGreaterThanE / validPairs) * 100;
+    const percentageEq = (cEqualE / validPairs) * 100;
+    const percentageTami = 100 - (percentageHori + percentageEq);
+    return [percentageHori, percentageEq, percentageTami]
+  }
+  else{
+    return [0.0, 0.0, 0.0]
+  }
+
+  //sheet.getRange("K27").setValue(`%${percentage.toFixed(1)}`);
+  //Browser.msgBox(`Oran: %${percentage.toFixed(1)}`);
+  //Logger.log("Hesaplanan oran: %s", percentage);
+}
+
+function calculateKillComparision() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  const bColumn = data.map(row => row[1]);
+  const dColumn = data.map(row => row[3]);
+
+  let rowsToCalculate = getRangeIndexes()
+  let validPairs = 0;
+  let bGreaterThanD = 0;
+  let bEqualD = 0;
+
+  for (let i = 0; i < rowsToCalculate.length; i++) {
+    const bValue = bColumn[rowsToCalculate[i]];
+    const dValue = dColumn[rowsToCalculate[i]];
+
+    if (isNumeric(bValue) && isNumeric(dValue)) {
+      validPairs++;
+      //Logger.log(`Valid -> No:${rowsToCalculate[i]+1}, Hori: ${bValue}, Tami: ${dValue}`);
+      if (bValue > dValue) {
+        bGreaterThanD++;
+      }
+      if (bValue == dValue){
+        bEqualD++;
+      }
+    }
+    else {
+      //Logger.log(`Invalid -> No:${rowsToCalculate[i]+1}, Hori: ${bValue}, Tami: ${dValue}`);
+    }
+  }
+
+  if (validPairs > 0){
+    const percentageHori = (bGreaterThanD / validPairs) * 100;
+    const percentageEq = (bEqualD / validPairs) * 100;
+    const percentageTami = 100 - (percentageHori + percentageEq);
+    return [percentageHori, percentageEq, percentageTami]
+  }
+  else{
+    return [0.0, 0.0, 0.0]
+  }
+}
+
+function getRangeIndexes(){
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const totalRows = sheet.getLastRow();
+  const results = [];
+
+  let start = 3;
+  while (start <= totalRows) {
+    const end = Math.min(start + 9, totalRows); // 10 eleman al, ama maxLimit'i aşma
+    for (let i = start; i <= end; i++) {
+      results.push(i);
+    }
+    start += 14; // 4 atla ve 10 al kuralına göre bir sonraki gruba geç
+  }
+
+  return results;
+}
+
+function getTotalRangeIndexes(){
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const totalRows = sheet.getLastRow();
+  const results = [];
+  var increaseStep = 14
+  let start = 14;
+
+  for (var i = start; i <= totalRows; i += increaseStep) {
+    results.push(i);
+  }
+
+  return results;
+}
+
+function getTotalKillsSoFar(){
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var indexesList = getTotalRangeIndexes();
+  var totalHori = 0
+  var totalTami = 0
+
+  indexesList.forEach(function(row) {
+    var valB = sheet.getRange(row, 2).getValue(); // B column
+    var valD = sheet.getRange(row, 4).getValue(); // D column
+    
+    totalHori += (valB || 0); // Boş hücreleri 0 olarak al
+    totalTami += (valD || 0); // Boş hücreleri 0 olarak al
+
+  });
+
+  return [totalHori, totalTami];  
+}
+
+
+function getTeamBests() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var totalKillsBest = 0
+  var avgDamageBest = 0
+  var avgReplacementBest = 1000
+  var avgScoreBest = 0.0
+
+  var totalKillsBestIndex = 0
+  var avgDamageBestIndex = 0
+  var avgReplacementBestIndex = 0
+  var avgScoreBestIndex = 0
+
+  var indexesList = getTotalRangeIndexes();
+
+  indexesList.forEach(function(row) {
+    var totalKills = sheet.getRange(row, 2).getValue() + sheet.getRange(row, 4).getValue(); // B ve D
+    var avgDamage = (sheet.getRange(row, 3).getValue() + sheet.getRange(row, 5).getValue()) / 2; // C ve E avg
+    var avgReplacement = sheet.getRange(row, 6).getValue() // F
+    var avgScore = sheet.getRange(row, 9).getValue() // I
+
+    if (totalKills >= totalKillsBest){
+      totalKillsBest = totalKills
+      totalKillsBestIndex = row
+    }
+    if (avgDamage >= avgDamageBest){
+      avgDamageBest = avgDamage
+      avgDamageBestIndex = row
+    }
+    if (avgReplacement < avgReplacementBest){
+      avgReplacementBest = avgReplacement
+      avgReplacementBestIndex = row
+    }
+    if (avgScore >= avgScoreBest){
+      avgScoreBest = (avgScore).toFixed(2)
+      avgScoreBestIndex = row
+    }
+  });
+
+  return [[totalKillsBest,totalKillsBestIndex], [avgDamageBest,avgDamageBestIndex], [avgReplacementBest,avgReplacementBestIndex], [avgScoreBest,avgScoreBestIndex]]
+}
+
+
+
+

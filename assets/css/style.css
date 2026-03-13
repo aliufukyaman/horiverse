@@ -532,6 +532,123 @@ img {
   margin-top: 30px;
 }
 
+.copyright a {
+  color: #999;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.copyright a:hover {
+  color: var(--primary-color);
+}
+
+/* Admin Login Modal */
+#admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+#admin-modal-box {
+  background: #1e1e3a;
+  border: 1px solid rgba(217, 180, 87, 0.2);
+  border-radius: 16px;
+  padding: 44px 40px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+#admin-modal-logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 6px;
+}
+
+#admin-modal-logo span {
+  color: #9090b0;
+  font-weight: 300;
+}
+
+#admin-modal-sub {
+  color: #9090b0;
+  font-size: 0.82rem;
+  margin-bottom: 28px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#admin-modal-user,
+#admin-modal-pass {
+  width: 100%;
+  padding: 11px 14px;
+  background: #0f0f2a;
+  border: 1px solid rgba(217, 180, 87, 0.15);
+  border-radius: 8px;
+  color: #e0e0f0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#admin-modal-user:focus,
+#admin-modal-pass:focus {
+  border-color: var(--primary-color);
+}
+
+#admin-modal-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s;
+  margin-top: 6px;
+}
+
+#admin-modal-btn:hover {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+#admin-modal-error {
+  color: #e74c3c;
+  font-size: 0.82rem;
+  margin-top: 10px;
+  display: none;
+}
+
+#admin-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #9090b0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+#admin-modal-close:hover {
+  color: #e74c3c;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-container {

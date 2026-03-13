@@ -171,12 +171,69 @@
           <li><a href="privacy_policy.html">Privacy Policy</a></li>
           <li><a href="terms_conditions.html">Terms & Conditions</a></li>
         </ul>
-        <p class="copyright">&copy; 2025 Horiverse. All rights reserved.</p>
+        <p class="copyright"><a href="#" id="copyright-link" onclick="openLoginModal(event)">&copy; 2026 Horiverse. All rights reserved.</a></p>
       </div>
     </div>
   </footer>
 
+  <!-- Admin Login Modal -->
+  <div id="admin-modal-overlay" style="display:none">
+    <div id="admin-modal-box">
+      <div id="admin-modal-logo">Hori<span>verse</span></div>
+      <div id="admin-modal-sub">Admin Girişi</div>
+      <input type="text" id="admin-modal-user" placeholder="Kullanıcı adı" autocomplete="username">
+      <input type="password" id="admin-modal-pass" placeholder="Şifre" autocomplete="current-password">
+      <button id="admin-modal-btn" onclick="submitAdminLogin()">Giriş</button>
+      <div id="admin-modal-error">Kullanıcı adı veya şifre hatalı.</div>
+      <button id="admin-modal-close" onclick="closeLoginModal()">✕</button>
+    </div>
+  </div>
+
   <!-- Custom JS -->
   <script src="assets/js/main.js"></script>
+  <script>
+    function openLoginModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('admin-modal-overlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('admin-modal-user').focus(), 100);
+    }
+    function closeLoginModal() {
+      document.getElementById('admin-modal-overlay').style.display = 'none';
+      document.getElementById('admin-modal-error').style.display = 'none';
+      document.getElementById('admin-modal-user').value = '';
+      document.getElementById('admin-modal-pass').value = '';
+    }
+    async function submitAdminLogin() {
+      const username = document.getElementById('admin-modal-user').value.trim();
+      const password = document.getElementById('admin-modal-pass').value;
+      const err = document.getElementById('admin-modal-error');
+      err.style.display = 'none';
+      try {
+        const r = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (r.ok) {
+          closeLoginModal();
+          window.location.href = '/admin.html';
+        } else {
+          err.style.display = 'block';
+        }
+      } catch {
+        err.style.display = 'block';
+      }
+    }
+    document.addEventListener('keydown', function(e) {
+      const overlay = document.getElementById('admin-modal-overlay');
+      if (overlay.style.display !== 'none') {
+        if (e.key === 'Enter') submitAdminLogin();
+        if (e.key === 'Escape') closeLoginModal();
+      }
+    });
+    document.getElementById('admin-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeLoginModal();
+    });
+  </script>
 </body>
 </html>
