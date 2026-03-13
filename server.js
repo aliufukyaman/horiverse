@@ -11,7 +11,7 @@ app.use(express.static('.'));
 // API routes
 import loginHandler from './api/login.js';
 import logoutHandler from './api/logout.js';
-import statsHandler from './api/stats.js';
+import statsHandler from './api/stats.local.js';
 
 app.post('/api/login', (req, res) => loginHandler(req, res));
 app.post('/api/logout', (req, res) => logoutHandler(req, res));

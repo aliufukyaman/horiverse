@@ -13176,22 +13176,22 @@
         },
         {
           "game": 9,
-          "hori_kill": null,
-          "hori_damage": null,
-          "tami_kill": null,
-          "tami_damage": null,
-          "rank": null,
+          "hori_kill": 0,
+          "hori_damage": 0,
+          "tami_kill": 0,
+          "tami_damage": 0,
+          "rank": 0,
           "hori_score": 0.306,
           "tami_score": 0.306,
           "score": 0.306
         },
         {
           "game": 10,
-          "hori_kill": null,
-          "hori_damage": null,
-          "tami_kill": null,
-          "tami_damage": null,
-          "rank": null,
+          "hori_kill": 0,
+          "hori_damage": 0,
+          "tami_kill": 0,
+          "tami_damage": 0,
+          "rank": 0,
           "hori_score": 0.306,
           "tami_score": 0.306,
           "score": 0.306
@@ -13203,9 +13203,9 @@
         "tami_kill": 9,
         "tami_damage": 139.75,
         "rank": 21.75,
-        "hori_score": 0.26714,
-        "tami_score": 0.26896,
-        "score": 0.26805
+        "hori_score": 0.2671,
+        "tami_score": 0.269,
+        "score": 0.2681
       }
     }
   ],
@@ -13219,19 +13219,17 @@
     "top3_rate": "8.1%",
     "hori_kill_avg": "1.276",
     "tami_kill_avg": "0.645",
-    "hori_max_kill": 9,
-    "tami_max_kill": 6,
     "hori_damage_mean_median": "226.4, 170",
     "tami_damage_mean_median": "129.7, 100",
     "hori_damage_max": 1195,
     "tami_damage_max": 935,
     "hp_comparison": "H: %66.5, Eq:%4.7, T: %28.7",
     "kill_comparison": "H: %39.9, Eq:%44.6, T: %15.5",
-    "team_total_kill_best": "43 — Day 68",
-    "team_avg_damage_best": "328.6 — Day 60",
-    "team_avg_score_best": "0.4115 — Day 68",
-    "hori_best_game": "Day 2, Game 10",
-    "tami_best_game": "Day 65, Game 2",
-    "best_game_ever": "Day 60, Game 10"
+    "team_total_kill_best": "43, Game No:68",
+    "team_avg_damage_best": "328.6, Game No:60",
+    "team_avg_score_best": "0.412, Game No:68",
+    "hori_best_game": "Game No:2, Game 10",
+    "tami_best_game": "Game No:65, Game 2",
+    "best_game_ever": "Game No:60, Game 10"
   }
 }

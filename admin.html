@@ -94,6 +94,21 @@
     .comparison-bar .eq-seg { background:var(--text-dim); }
     .comparison-bar .tami-seg { background:var(--tami); }
 
+    /* ─── OVERALL STATS TABLE ─── */
+    .stats-table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+    .stats-table thead th { padding:12px 16px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid var(--border); }
+    .th-common { color:var(--text-dim); text-align:center; }
+    .th-hori { color:var(--hori); text-align:center; }
+    .th-tami { color:var(--tami); text-align:center; }
+    .stats-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+    .stats-table tbody tr:hover { background:rgba(255,255,255,0.03); }
+    .stats-table tbody tr:last-child { border-bottom:none; }
+    .st-label { padding:10px 16px; font-size:0.8rem; color:var(--text-dim); white-space:nowrap; width:200px; }
+    .st-common { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:500; }
+    .st-hori { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:600; color:var(--hori); }
+    .st-tami { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:600; color:var(--tami); }
+    .tr-section td { padding:8px 16px; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim); background:var(--card2); border-top:2px solid var(--border); }
+
     /* ─── GAME DAY LIST & DETAIL ─── */
     .panel-row { display:grid; grid-template-columns:320px 1fr; gap:20px; align-items:start; }
     .panel-left { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
@@ -196,6 +211,13 @@
     .toast.show { transform:translateY(0); opacity:1; }
     .toast.error { background:var(--red); }
 
+    .total-computed {
+      display: inline-block;
+      color: var(--gold);
+      font-weight: 600;
+      min-width: 40px;
+    }
+
     /* scrollbar */
     ::-webkit-scrollbar { width:6px; height:6px; }
     ::-webkit-scrollbar-track { background:var(--dark); }
@@ -239,8 +261,8 @@
 
     <!-- OVERALL -->
     <div class="section-title"><i class="fas fa-chart-bar"></i> Overall Statistics</div>
-    <div class="overall-grid" id="overall-grid">
-      <div class="stat-card"><div class="label">Loading...</div></div>
+    <div id="overall-grid" style="margin-bottom:32px">
+      <div style="color:var(--text-dim);padding:20px">Loading...</div>
     </div>
 
     <!-- GAME DAYS -->
@@ -315,7 +337,7 @@ async function loadStats() {
     renderOverall(statsData.overall);
     renderGDList(statsData.game_days);
   } catch (e) {
-    showToast('Veri yüklenemedi', true);
+    showToast('Failed to load data', true);
   }
 }
 
@@ -324,59 +346,81 @@ function renderOverall(o) {
   if (!o) return;
 
   function parseComp(str) {
-    if (!str) return [50,0,50];
+    if (!str) return [50, 0, 50];
     const m = str.match(/H: %(\d+\.?\d*), Eq:%(\d+\.?\d*), T: %(\d+\.?\d*)/);
-    return m ? [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])] : [50,0,50];
+    return m ? [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])] : [50, 0, 50];
   }
 
   const hp = parseComp(o.hp_comparison);
   const kl = parseComp(o.kill_comparison);
 
-  const cards = [
-    { label:'Total Games', value: o.total_games_played || 0, cls:'', sub: '' },
-    { label:'Total Wins', value: o.total_wins || 0, cls:'green-card', sub: 'Win rate: ' + (o.win_rate || '—') },
-    { label:'Top 3 Finishes', value: o.total_top3 || 0, cls:'', sub: 'Top3 rate: ' + (o.top3_rate || '—') },
-    { label:'Hori Total Kills', value: o.hori_total_kills || 0, cls:'hori-card', sub: `Avg: ${o.hori_kill_avg || '—'} · Max: ${o.hori_max_kill ?? '—'}` },
-    { label:'Tami Total Kills', value: o.tami_total_kills || 0, cls:'tami-card', sub: `Avg: ${o.tami_kill_avg || '—'} · Max: ${o.tami_max_kill ?? '—'}` },
-    {
-      label:'Damage (Hori)', value: o.hori_damage_max || 0, cls:'hori-card',
-      sub: 'Max single game', extra: `Mean/Median: ${o.hori_damage_mean_median || '—'}`
-    },
-    {
-      label:'Damage (Tami)', value: o.tami_damage_max || 0, cls:'tami-card',
-      sub: 'Max single game', extra: `Mean/Median: ${o.tami_damage_mean_median || '—'}`
-    },
-    {
-      label:'HP Karşılaştırma', value: `%${hp[0]}`, cls:'hori-card',
-      sub: `Hori üstün`, extra: `T: %${hp[2]} | Eq: %${hp[1]}`,
-      bar: hp
-    },
-    {
-      label:'Kill Karşılaştırma', value: `%${kl[0]}`, cls:'hori-card',
-      sub: `Hori kill üstün`, extra: `T: %${kl[2]} | Eq: %${kl[1]}`,
-      bar: kl
-    },
-    { label:'Best Team Kill Day', value: o.team_total_kill_best || '—', cls:'', sub: '' },
-    { label:'Best Team Avg Damage Day', value: o.team_avg_damage_best || '—', cls:'', sub: '' },
-    { label:'Best Team Score Day', value: o.team_avg_score_best || '—', cls:'', sub: '' },
-    { label:'Hori Best Game', value: o.hori_best_game || '—', cls:'hori-card', sub: '' },
-    { label:'Tami Best Game', value: o.tami_best_game || '—', cls:'tami-card', sub: '' },
-    { label:'Best Game Ever', value: o.best_game_ever || '—', cls:'green-card', sub: '' },
-  ];
+  function bar(seg) {
+    return `<div class="comparison-bar" style="margin-top:6px">
+      <div class="hori-seg" style="width:${seg[0]}%"></div>
+      <div class="eq-seg" style="width:${seg[1]}%"></div>
+      <div class="tami-seg" style="width:${seg[2]}%"></div>
+    </div>`;
+  }
 
-  document.getElementById('overall-grid').innerHTML = cards.map(c => `
-    <div class="stat-card ${c.cls}">
-      <div class="label">${c.label}</div>
-      <div class="value" style="font-size:${String(c.value).length>8?'0.95rem':'1.4rem'}">${c.value}</div>
-      ${c.sub ? `<div class="sub">${c.sub}</div>` : ''}
-      ${c.extra ? `<div class="sub">${c.extra}</div>` : ''}
-      ${c.bar ? `<div class="comparison-bar" style="margin-top:8px">
-        <div class="hori-seg" style="width:${c.bar[0]}%"></div>
-        <div class="eq-seg" style="width:${c.bar[1]}%"></div>
-        <div class="tami-seg" style="width:${c.bar[2]}%"></div>
-      </div>` : ''}
-    </div>
-  `).join('');
+  function row(label, common, hori, tami) {
+    return `<tr>
+      <td class="st-label">${label}</td>
+      <td class="st-common">${common ?? '—'}</td>
+      <td class="st-hori">${hori ?? '—'}</td>
+      <td class="st-tami">${tami ?? '—'}</td>
+    </tr>`;
+  }
+
+  document.getElementById('overall-grid').innerHTML = `
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="th-common">Common</th>
+          <th class="th-hori">Horizon</th>
+          <th class="th-tami">Tami</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${row('Total Games', o.total_games_played, '—', '—')}
+        ${row('Wins / Win Rate', `${o.total_wins} (${o.win_rate})`, '—', '—')}
+        ${row('Top 3 / Top3 Rate', `${o.total_top3} (${o.top3_rate})`, '—', '—')}
+        ${row('Total Kills', '—', o.hori_total_kills, o.tami_total_kills)}
+        ${row('Kill Avg / game', '—', o.hori_kill_avg, o.tami_kill_avg)}
+        ${row('Max Kills (single game)', '—', o.hori_max_kill, o.tami_max_kill)}
+        ${row('Max Damage (single game)', '—', o.hori_damage_max, o.tami_damage_max)}
+        ${row('Damage Mean / Median', '—', o.hori_damage_mean_median, o.tami_damage_mean_median)}
+        <tr>
+          <td class="st-label">Damage Lead %</td>
+          <td class="st-common" colspan="3">
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem">
+              <span style="color:var(--hori)">Hori %${hp[0]}</span>
+              <div style="flex:1">${bar(hp)}</div>
+              <span style="color:var(--tami)">Tami %${hp[2]}</span>
+              <span style="color:var(--text-dim);font-size:0.72rem">Eq %${hp[1]}</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="st-label">Kill Lead %</td>
+          <td class="st-common" colspan="3">
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem">
+              <span style="color:var(--hori)">Hori %${kl[0]}</span>
+              <div style="flex:1">${bar(kl)}</div>
+              <span style="color:var(--tami)">Tami %${kl[2]}</span>
+              <span style="color:var(--text-dim);font-size:0.72rem">Eq %${kl[1]}</span>
+            </div>
+          </td>
+        </tr>
+        <tr class="tr-section"><td colspan="4">Best Performances</td></tr>
+        ${row('Best Team Kill Day', o.team_total_kill_best, '—', '—')}
+        ${row('Best Team Avg Damage Day', o.team_avg_damage_best, '—', '—')}
+        ${row('Best Team Score Day', o.team_avg_score_best, '—', '—')}
+        ${row('Best Game Ever', o.best_game_ever, '—', '—')}
+        ${row('Personal Best Game', '—', o.hori_best_game, o.tami_best_game)}
+      </tbody>
+    </table>
+  `;
 }
 
 // ─── GAME DAY LIST ───────────────────────────────────
@@ -445,8 +489,16 @@ function renderDetail() {
   function cell(key, obj, cls='') {
     const v = obj[key] !== undefined && obj[key] !== null ? obj[key] : '';
     const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : parseFloat(v.toFixed(4))) : v;
-    if (em) return `<input class="editable" data-key="${key}" value="${disp}" type="number" step="any">`;
+    if (em) return `<input class="editable" data-key="${key}" value="${disp}" type="text" inputmode="decimal" oninput="recalcTotal()">`;
     return `<span class="${cls}">${disp !== '' ? disp : '—'}</span>`;
+  }
+
+  function totalCell(key) {
+    // in edit mode: read-only computed cell
+    const v = totalRow[key];
+    const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : parseFloat(v.toFixed(4))) : (v ?? '—');
+    if (em) return `<span class="total-computed" id="tc-${key}">${disp}</span>`;
+    return `<span>${disp !== undefined && disp !== null && disp !== '' ? disp : '—'}</span>`;
   }
 
   function rankClass(r) {
@@ -473,7 +525,7 @@ function renderDetail() {
       <div class="detail-meta">
         <div>
           <label>Game No</label>
-          ${em ? `<input type="number" id="meta-gno" value="${gd.game_no}" style="width:80px">` : `<strong>${gd.game_no}</strong>`}
+          ${em ? `<input type="text" inputmode="numeric" id="meta-gno" value="${gd.game_no}" style="width:80px">` : `<strong>${gd.game_no}</strong>`}
         </div>
         <div>
           <label>Date</label>
@@ -516,14 +568,14 @@ function renderDetail() {
             `).join('')}
             <tr class="total-row" id="total-row">
               <td class="game-num" style="color:var(--gold)">Σ</td>
-              <td>${cell('hori_kill', totalRow)}</td>
-              <td>${cell('hori_damage', totalRow)}</td>
-              <td>${cell('tami_kill', totalRow)}</td>
-              <td>${cell('tami_damage', totalRow)}</td>
-              <td>${cell('rank', totalRow)}</td>
-              <td>${cell('hori_score', totalRow)}</td>
-              <td>${cell('tami_score', totalRow)}</td>
-              <td>${cell('score', totalRow)}</td>
+              <td>${totalCell('hori_kill')}</td>
+              <td>${totalCell('hori_damage')}</td>
+              <td>${totalCell('tami_kill')}</td>
+              <td>${totalCell('tami_damage')}</td>
+              <td>${totalCell('rank')}</td>
+              <td>${totalCell('hori_score')}</td>
+              <td>${totalCell('tami_score')}</td>
+              <td>${totalCell('score')}</td>
             </tr>
           </tbody>
         </table>
@@ -584,6 +636,35 @@ function cancelEdit() {
   renderDetail();
 }
 
+function recalcTotal() {
+  const tbody = document.getElementById('games-tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr[data-idx]');
+  const sums = { hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0, rank:0, hori_score:0, tami_score:0, score:0 };
+  rows.forEach(row => {
+    row.querySelectorAll('input.editable').forEach(inp => {
+      const k = inp.dataset.key;
+      if (k in sums) sums[k] += parseFloat(inp.value) || 0;
+    });
+  });
+  const n = rows.length || 1;
+  // kills: sum | damage: avg | rank: avg | scores: avg
+  const display = {
+    hori_kill: sums.hori_kill,
+    hori_damage: parseFloat((sums.hori_damage / n).toFixed(1)),
+    tami_kill: sums.tami_kill,
+    tami_damage: parseFloat((sums.tami_damage / n).toFixed(1)),
+    rank: parseFloat((sums.rank / n).toFixed(1)),
+    hori_score: parseFloat((sums.hori_score / n).toFixed(4)),
+    tami_score: parseFloat((sums.tami_score / n).toFixed(4)),
+    score: parseFloat((sums.score / n).toFixed(4)),
+  };
+  Object.entries(display).forEach(([k, v]) => {
+    const el = document.getElementById(`tc-${k}`);
+    if (el) el.textContent = v;
+  });
+}
+
 function collectEditedData() {
   const gno = parseInt(document.getElementById('meta-gno').value) || selectedGD.game_no;
   const date = document.getElementById('meta-date').value.trim();
@@ -599,9 +680,13 @@ function collectEditedData() {
     games.push(g);
   });
 
-  const totalInputs = document.getElementById('total-row').querySelectorAll('input.editable');
+  // collect computed totals from the display spans
+  const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank','hori_score','tami_score','score'];
   const total = {};
-  totalInputs.forEach(inp => { total[inp.dataset.key] = parseFloat(inp.value) || 0; });
+  keys.forEach(k => {
+    const el = document.getElementById(`tc-${k}`);
+    total[k] = el ? parseFloat(el.textContent) || 0 : 0;
+  });
 
   return { game_no: gno, date, best_game: best, games, total };
 }
