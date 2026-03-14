@@ -169,10 +169,18 @@
     ::-webkit-scrollbar-track{background:var(--dark);}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
+    /* back button for narrow screens */
+    .back-btn{display:none;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;align-items:center;gap:5px;}
+    .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+
     @media(max-width:1100px){
       .summary-row{grid-template-columns:1fr 1fr;}
       .charts-row{grid-template-columns:1fr;}
       .gd-row{grid-template-columns:1fr;}
+      /* narrow: show only one panel at a time */
+      .gd-row.show-detail #panel-left{display:none;}
+      .gd-row:not(.show-detail) #detail-panel{display:none;}
+      .back-btn{display:flex;}
     }
     @media(max-width:700px){
       .summary-row{grid-template-columns:1fr;}
@@ -516,6 +524,12 @@ function selectGD(gno) {
   editMode = false; isNew = false;
   renderGDList(statsData.game_days);
   renderDetail();
+  document.getElementById('gd-row').classList.add('show-detail');
+  document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showGDList() {
+  document.getElementById('gd-row').classList.remove('show-detail');
 }
 
 // ── NEW ────────────────────────────────────────────────
@@ -534,6 +548,8 @@ function newGameDay() {
   };
   editMode = true; isNew = true;
   renderDetail();
+  document.getElementById('gd-row').classList.add('show-detail');
+  document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ── RENDER DETAIL ──────────────────────────────────────
@@ -585,7 +601,7 @@ function renderDetail() {
 
   el.innerHTML = `
     <div class="detail-header">
-      <h3>Game Day ${gd.game_no}</h3>
+      <h3><button class="back-btn" onclick="showGDList()"><i class="fas fa-arrow-left"></i> Back</button> Game Day ${gd.game_no}</h3>
       <div class="detail-actions">
         ${em ? `
           <button class="btn-save" onclick="saveGD()"><i class="fas fa-check"></i> Save</button>
@@ -739,7 +755,7 @@ function renderDaySummary(gd) {
 function startEdit() { editMode=true; renderDetail(); }
 
 function cancelEdit() {
-  if (isNew) { selectedGD=null; isNew=false; editMode=false; renderDetail(); return; }
+  if (isNew) { selectedGD=null; isNew=false; editMode=false; renderDetail(); showGDList(); return; }
   editMode=false; renderDetail();
 }
 
@@ -749,10 +765,12 @@ function collectEditedData() {
   const best = document.getElementById('meta-best').value.trim();
 
   const rows = document.querySelectorAll('#games-tbody tr[data-idx]');
+  const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank'];
   const games = [];
   rows.forEach((row, idx) => {
     const get = k => { const el=row.querySelector(`[data-key="${k}"]`); return el ? Number(el.value)||0 : 0; };
-    games.push({
+    const isEmpty = keys.every(k => get(k) === 0);
+    if (!isEmpty) games.push({
       game: idx+1,
       hori_kill:   get('hori_kill'),
       hori_damage: get('hori_damage'),
@@ -764,21 +782,27 @@ function collectEditedData() {
   return { game_no: gno, date, best_game: best, games };
 }
 
-function validateAll() {
-  const inputs = document.querySelectorAll('.edit-input');
-  let ok = true;
-  inputs.forEach(inp => { if (!validateInput(inp)) ok = false; });
+function isRowEmpty(row) {
+  const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank'];
+  return keys.every(k => { const el=row.querySelector(`[data-key="${k}"]`); return !el || Number(el.value)===0; });
+}
 
-  // check no row is entirely zero (all 5 fields zero = not filled)
+function validateAll() {
   const rows = document.querySelectorAll('#games-tbody tr[data-idx]');
-  const emptyRows = [];
+  let ok = true;
   rows.forEach(row => {
-    const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank'];
-    const allZero = keys.every(k => { const el=row.querySelector(`[data-key="${k}"]`); return !el || Number(el.value)===0; });
-    if (allZero) emptyRows.push(Number(row.dataset.idx)+1);
+    if (isRowEmpty(row)) {
+      // clear any error styling on empty rows
+      row.querySelectorAll('.edit-input').forEach(inp => inp.classList.remove('err'));
+      return;
+    }
+    row.querySelectorAll('.edit-input').forEach(inp => { if (!validateInput(inp)) ok = false; });
   });
-  if (emptyRows.length > 0) {
-    showSaveErr(`Game(s) ${emptyRows.join(', ')} have no data. Fill in or set rank at least.`);
+
+  // at least one row must have data
+  const hasAny = Array.from(rows).some(row => !isRowEmpty(row));
+  if (!hasAny) {
+    showSaveErr('Enter data for at least one game.');
     ok = false;
   }
   return ok;
@@ -811,6 +835,7 @@ async function deleteGD() {
     selectedGD=null;
     await loadStats();
     document.getElementById('detail-panel').innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>';
+    showGDList();
     showToast('Game Day deleted');
   } catch { showToast('An error occurred', true); }
 }
