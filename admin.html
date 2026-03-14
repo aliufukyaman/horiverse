@@ -333,11 +333,23 @@ async function loadStats() {
   try {
     const r = await fetch('/api/stats');
     if (r.status === 401) { location.reload(); return; }
-    statsData = await r.json();
+    const body = await r.json();
+    if (!r.ok) {
+      document.getElementById('overall-grid').innerHTML =
+        `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
+          <strong>API Error ${r.status}:</strong> ${body.error || 'Unknown error'}<br>
+          <span style="color:var(--text-dim);font-size:0.75rem">Check Vercel env vars: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO</span>
+        </div>`;
+      return;
+    }
+    statsData = body;
     renderOverall(statsData.overall);
     renderGDList(statsData.game_days);
   } catch (e) {
-    showToast('Failed to load data', true);
+    document.getElementById('overall-grid').innerHTML =
+      `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
+        <strong>Network error:</strong> ${e.message}
+      </div>`;
   }
 }
 
@@ -739,15 +751,24 @@ function showToast(msg, error=false) {
 (async function checkSession() {
   try {
     const r = await fetch('/api/stats');
-    if (r.ok) {
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      const data = await r.json();
-      statsData = data;
-      renderOverall(data.overall);
-      renderGDList(data.game_days);
+    if (r.status === 401) return; // not logged in, show login screen
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    const body = await r.json();
+    if (!r.ok) {
+      document.getElementById('overall-grid').innerHTML =
+        `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
+          <strong>API Error ${r.status}:</strong> ${body.error || 'Unknown'}<br>
+          <span style="color:var(--text-dim);font-size:0.75rem">Check Vercel env vars: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO</span>
+        </div>`;
+      return;
     }
-  } catch {}
+    statsData = body;
+    renderOverall(body.overall);
+    renderGDList(body.game_days);
+  } catch (e) {
+    // network error — stay on login screen
+  }
 })();
 </script>
 </body>
