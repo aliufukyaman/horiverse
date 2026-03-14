@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dart analyze lib/screens/levels_screen.dart lib/screens/settings_screen.dart lib/screens/language_screen.dart)",
+      "Bash(flutter analyze lib/screens/game_screen.dart)",
+      "Bash(dart analyze lib/screens/category_screen.dart lib/screens/levels_screen.dart lib/screens/settings_screen.dart lib/screens/language_screen.dart --no-fatal-infos --no-fatal-warnings)",
+      "Bash(dart analyze:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(del \"d:\\workspace\\dev\\horiku_flutter\\lib\\mainy.dart\")",
+      "Bash(flutter test:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(dir:*)",
+      "Bash(flutter clean:*)",
+      "Bash(dart run:*)",
+      "Bash(flutter pub add:*)",
+      "Read(//d/**)",
+      "Bash(flutter build:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell:*)",
+      "Bash(python -c:*)",
+      "Bash(test:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,241 +1,219 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Horiverse Admin — PUBG Stats</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --gold: #d9b457;
-      --gold-light: #e5c982;
-      --dark: #1a1a2e;
-      --dark2: #16213e;
-      --dark3: #0f3460;
-      --card: #1e1e3a;
-      --card2: #252550;
-      --text: #e0e0f0;
-      --text-dim: #9090b0;
-      --green: #2ecc71;
-      --red: #e74c3c;
-      --blue: #3498db;
-      --hori: #d9b457;
-      --tami: #3498db;
-      --border: rgba(217,180,87,0.15);
+      --gold:#d9b457; --gold-light:#e5c982;
+      --dark:#1a1a2e; --dark2:#16213e; --dark3:#0f3460;
+      --card:#1e1e3a; --card2:#252550;
+      --text:#e0e0f0; --text-dim:#9090b0;
+      --green:#2ecc71; --red:#e74c3c; --blue:#3498db;
+      --hori:#d9b457; --tami:#3498db;
+      --border:rgba(217,180,87,0.15);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Poppins',sans-serif; background:var(--dark); color:var(--text); min-height:100vh; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Poppins',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
 
-    /* ─── LOGIN OVERLAY ─── */
-    #login-overlay {
-      position:fixed; inset:0; background:var(--dark);
-      display:flex; align-items:center; justify-content:center; z-index:9999;
+    /* LOGIN */
+    #login-overlay{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:9999;}
+    .login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:48px 40px;width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+    .login-logo{font-size:2rem;font-weight:700;color:var(--gold);margin-bottom:8px;}
+    .login-logo span{color:var(--text-dim);font-weight:300;}
+    .login-subtitle{color:var(--text-dim);font-size:.85rem;margin-bottom:32px;}
+    .login-box input{width:100%;padding:12px 16px;background:var(--dark2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:.95rem;margin-bottom:12px;outline:none;transition:border-color .2s;}
+    .login-box input:focus{border-color:var(--gold);}
+    .login-btn{width:100%;padding:13px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer;transition:all .2s;margin-top:8px;}
+    .login-btn:hover{background:var(--gold-light);transform:translateY(-1px);}
+    #login-error{color:var(--red);font-size:.85rem;margin-top:12px;display:none;}
+
+    /* LAYOUT */
+    #app{display:none;}
+    .topbar{background:var(--dark2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .topbar-logo{font-size:1.4rem;font-weight:700;color:var(--gold);}
+    .topbar-logo span{color:var(--text-dim);font-weight:300;}
+    .topbar-right{display:flex;align-items:center;gap:16px;}
+    .topbar-tag{font-size:.75rem;color:var(--text-dim);background:var(--card);padding:4px 10px;border-radius:20px;}
+    .logout-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .2s;font-family:inherit;}
+    .logout-btn:hover{border-color:var(--red);color:var(--red);}
+    .main-wrap{padding:24px;max-width:1500px;margin:0 auto;}
+    .section-title{font-size:1rem;font-weight:600;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+    /* SUMMARY PANELS */
+    .summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px;}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+    .panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+
+    /* GENERAL STATS TABLE */
+    .gen-stats{width:100%;border-collapse:collapse;font-size:.82rem;}
+    .gen-stats td{padding:6px 4px;color:var(--text-dim);}
+    .gen-stats td:last-child{font-weight:600;color:var(--text);text-align:right;}
+
+    /* BEST TABLE */
+    .best-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+    .best-table tr{border-bottom:1px solid var(--border);}
+    .best-table tr:last-child{border-bottom:none;}
+    .best-table td{padding:6px 4px;}
+    .best-table .bl{color:var(--text-dim);font-size:.72rem;}
+    .best-table .bv{font-weight:600;color:var(--gold);}
+
+    /* COMPARISON TABLE */
+    .cmp-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+    .cmp-table thead th{padding:6px 8px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);}
+    .cmp-table thead .th-h{color:var(--hori);}
+    .cmp-table thead .th-t{color:var(--tami);}
+    .cmp-table tbody tr{border-bottom:1px solid var(--border);}
+    .cmp-table tbody tr:last-child{border-bottom:none;}
+    .cmp-table td{padding:7px 8px;text-align:center;}
+    .cmp-table .lbl{text-align:left;color:var(--text-dim);font-size:.75rem;}
+    .cmp-table .hv{color:var(--hori);font-weight:600;}
+    .cmp-table .tv{color:var(--tami);font-weight:600;}
+    .cmp-bar-wrap{display:flex;gap:4px;align-items:center;padding:4px 0;}
+    .cmp-bar{height:6px;border-radius:3px;flex-shrink:0;}
+
+    /* CHART */
+    .charts-row{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:28px;}
+    .chart-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+    .chart-wrap{position:relative;height:200px;}
+
+    /* GAME DAY PANEL */
+    .gd-row{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:28px;align-items:start;}
+    .panel-left{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:sticky;top:60px;max-height:calc(100vh - 80px);}
+    .panel-right{min-height:0;}
+    .panel-left-header{padding:12px 16px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .panel-left-header h3{font-size:.88rem;font-weight:600;}
+    .add-day-btn{background:var(--gold);color:#1a1a2e;border:none;border-radius:6px;padding:5px 11px;font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+    .add-day-btn:hover{background:var(--gold-light);}
+    .game-day-list{overflow-y:auto;flex:1;}
+    .game-day-item{padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;}
+    .game-day-item:hover{background:var(--card2);}
+    .game-day-item.active{background:rgba(217,180,87,.1);border-left:3px solid var(--gold);}
+    .game-day-item .gd-num{font-weight:600;font-size:.85rem;}
+    .game-day-item .gd-date{font-size:.72rem;color:var(--text-dim);}
+    .game-day-item .gd-score{font-size:.72rem;color:var(--gold);background:rgba(217,180,87,.1);padding:2px 7px;border-radius:10px;}
+
+    /* DETAIL */
+    .panel-right{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;}
+    .detail-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .detail-header h3{font-size:.95rem;font-weight:600;}
+    .detail-actions{display:flex;gap:8px;}
+    .btn-edit,.btn-save,.btn-cancel,.btn-delete{border:none;border-radius:6px;padding:6px 13px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:4px;}
+    .btn-edit{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+    .btn-edit:hover{border-color:var(--gold);color:var(--gold);}
+    .btn-save{background:var(--green);color:#fff;}
+    .btn-save:hover{background:#27ae60;}
+    .btn-cancel{background:var(--card2);color:var(--text-dim);border:1px solid var(--border);}
+    .btn-cancel:hover{border-color:var(--red);color:var(--red);}
+    .btn-delete{background:transparent;color:var(--red);border:1px solid rgba(231,76,60,.3);}
+    .btn-delete:hover{background:var(--red);color:#fff;}
+    .detail-body{padding:16px 18px;overflow-y:auto;flex:1;}
+    .detail-meta{display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;}
+    .detail-meta .mf{display:flex;flex-direction:column;gap:3px;}
+    .detail-meta label{font-size:.7rem;color:var(--text-dim);}
+    .meta-input{background:var(--dark2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-family:inherit;font-size:.82rem;outline:none;transition:border-color .2s;}
+    .meta-input:focus{border-color:var(--gold);}
+
+    /* GAMES TABLE */
+    .tbl-wrap{overflow-x:auto;}
+    table.gtbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+    .gtbl thead th{padding:8px 6px;text-align:center;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim);border-bottom:2px solid var(--border);white-space:nowrap;}
+    .gtbl thead th.hc{color:var(--hori);}
+    .gtbl thead th.tc{color:var(--tami);}
+    .gtbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+    .gtbl tbody tr:hover{background:rgba(255,255,255,.02);}
+    .gtbl tbody tr.total-row{background:rgba(217,180,87,.05);border-top:2px solid var(--border);}
+    .gtbl td{padding:6px;text-align:center;}
+    .gtbl td.gn{font-weight:600;color:var(--text-dim);font-size:.72rem;}
+    .rank-1{color:var(--gold);font-weight:700;}
+    .rank-top3{color:var(--green);font-weight:600;}
+
+    /* EDIT */
+    .edit-input{background:var(--dark2);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px 5px;font-family:inherit;font-size:.8rem;width:54px;text-align:center;outline:none;transition:border-color .2s;}
+    .edit-input:focus{border-color:var(--gold);}
+    .edit-input.err{border-color:var(--red)!important;}
+    .total-computed{color:var(--gold);font-weight:600;min-width:36px;display:inline-block;}
+
+    /* DAY SUMMARY */
+    .day-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:14px;}
+    .day-stat{background:var(--dark2);border-radius:8px;padding:10px 12px;}
+    .ds-label{font-size:.68rem;color:var(--text-dim);margin-bottom:2px;}
+    .ds-val{font-size:1rem;font-weight:600;}
+    .ds-sub{font-size:.68rem;color:var(--text-dim);margin-top:1px;}
+
+    /* MISC */
+    .empty-state{text-align:center;padding:50px 20px;color:var(--text-dim);}
+    .empty-state i{font-size:2rem;margin-bottom:10px;display:block;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:11px 18px;border-radius:8px;font-size:.82rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9998;transform:translateY(100px);opacity:0;transition:all .3s;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.error{background:var(--red);}
+    .err-msg{color:var(--red);font-size:.75rem;margin-top:6px;display:none;}
+
+    /* DAY POPUP */
+    #day-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:9000;padding:20px;}
+    .day-popup{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:780px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+    .day-popup-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);}
+    .day-popup-title{font-size:1rem;font-weight:600;color:var(--gold);}
+    .day-popup-close{background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .2s;}
+    .day-popup-close:hover{color:var(--text);}
+    .day-popup-body{overflow:auto;padding:16px 24px 20px;}
+    .popup-summary{font-size:.8rem;color:var(--text-dim);margin-bottom:12px;line-height:1.8;}
+    .day-link{color:var(--gold);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;}
+    .day-link:hover{color:var(--gold-light);}
+
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--dark);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+    @media(max-width:1100px){
+      .summary-row{grid-template-columns:1fr 1fr;}
+      .charts-row{grid-template-columns:1fr;}
+      .gd-row{grid-template-columns:1fr;}
     }
-    .login-box {
-      background:var(--card); border:1px solid var(--border);
-      border-radius:16px; padding:48px 40px; width:360px; text-align:center;
-      box-shadow:0 20px 60px rgba(0,0,0,0.5);
-    }
-    .login-logo { font-size:2rem; font-weight:700; color:var(--gold); margin-bottom:8px; }
-    .login-logo span { color:var(--text-dim); font-weight:300; }
-    .login-subtitle { color:var(--text-dim); font-size:0.85rem; margin-bottom:32px; }
-    .login-box input {
-      width:100%; padding:12px 16px; background:var(--dark2); border:1px solid var(--border);
-      border-radius:8px; color:var(--text); font-family:inherit; font-size:0.95rem;
-      margin-bottom:12px; outline:none; transition:border-color 0.2s;
-    }
-    .login-box input:focus { border-color:var(--gold); }
-    .login-btn {
-      width:100%; padding:13px; background:var(--gold); color:#1a1a2e;
-      border:none; border-radius:8px; font-weight:700; font-size:1rem;
-      cursor:pointer; transition:all 0.2s; margin-top:8px;
-    }
-    .login-btn:hover { background:var(--gold-light); transform:translateY(-1px); }
-    #login-error { color:var(--red); font-size:0.85rem; margin-top:12px; display:none; }
-
-    /* ─── DASHBOARD LAYOUT ─── */
-    #app { display:none; }
-    .topbar {
-      background:var(--dark2); border-bottom:1px solid var(--border);
-      padding:14px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100;
-    }
-    .topbar-logo { font-size:1.4rem; font-weight:700; color:var(--gold); }
-    .topbar-logo span { color:var(--text-dim); font-weight:300; }
-    .topbar-right { display:flex; align-items:center; gap:16px; }
-    .topbar-tag { font-size:0.75rem; color:var(--text-dim); background:var(--card); padding:4px 10px; border-radius:20px; }
-    .logout-btn {
-      background:transparent; border:1px solid var(--border); color:var(--text-dim);
-      padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.8rem;
-      transition:all 0.2s; font-family:inherit;
-    }
-    .logout-btn:hover { border-color:var(--red); color:var(--red); }
-
-    .main-wrap { padding:24px; max-width:1400px; margin:0 auto; }
-
-    /* ─── OVERALL STATS ─── */
-    .section-title { font-size:1.1rem; font-weight:600; color:var(--gold); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .section-title i { font-size:0.9rem; }
-
-    .overall-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:32px; }
-    .stat-card {
-      background:var(--card); border:1px solid var(--border); border-radius:12px;
-      padding:16px 20px;
-    }
-    .stat-card .label { font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
-    .stat-card .value { font-size:1.4rem; font-weight:700; color:var(--text); }
-    .stat-card .sub { font-size:0.75rem; color:var(--text-dim); margin-top:2px; }
-    .stat-card.hori-card .value { color:var(--hori); }
-    .stat-card.tami-card .value { color:var(--tami); }
-    .stat-card.green-card .value { color:var(--green); }
-
-    .comparison-bar { display:flex; border-radius:6px; overflow:hidden; height:8px; margin-top:6px; }
-    .comparison-bar .hori-seg { background:var(--hori); }
-    .comparison-bar .eq-seg { background:var(--text-dim); }
-    .comparison-bar .tami-seg { background:var(--tami); }
-
-    /* ─── OVERALL STATS TABLE ─── */
-    .stats-table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); }
-    .stats-table thead th { padding:12px 16px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid var(--border); }
-    .th-common { color:var(--text-dim); text-align:center; }
-    .th-hori { color:var(--hori); text-align:center; }
-    .th-tami { color:var(--tami); text-align:center; }
-    .stats-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
-    .stats-table tbody tr:hover { background:rgba(255,255,255,0.03); }
-    .stats-table tbody tr:last-child { border-bottom:none; }
-    .st-label { padding:10px 16px; font-size:0.8rem; color:var(--text-dim); white-space:nowrap; width:200px; }
-    .st-common { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:500; }
-    .st-hori { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:600; color:var(--hori); }
-    .st-tami { padding:10px 16px; text-align:center; font-size:0.85rem; font-weight:600; color:var(--tami); }
-    .tr-section td { padding:8px 16px; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim); background:var(--card2); border-top:2px solid var(--border); }
-
-    /* ─── GAME DAY LIST & DETAIL ─── */
-    .panel-row { display:grid; grid-template-columns:320px 1fr; gap:20px; align-items:start; }
-    .panel-left { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-    .panel-left-header {
-      padding:14px 16px; background:var(--card2); border-bottom:1px solid var(--border);
-      display:flex; align-items:center; justify-content:space-between;
-    }
-    .panel-left-header h3 { font-size:0.9rem; font-weight:600; }
-    .add-day-btn {
-      background:var(--gold); color:#1a1a2e; border:none; border-radius:6px;
-      padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;
-      display:flex; align-items:center; gap:4px; font-family:inherit; transition:all 0.2s;
-    }
-    .add-day-btn:hover { background:var(--gold-light); }
-
-    .game-day-list { max-height:600px; overflow-y:auto; }
-    .game-day-item {
-      padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer;
-      display:flex; align-items:center; justify-content:space-between;
-      transition:background 0.15s;
-    }
-    .game-day-item:hover { background:var(--card2); }
-    .game-day-item.active { background:rgba(217,180,87,0.1); border-left:3px solid var(--gold); }
-    .game-day-item .gd-num { font-weight:600; font-size:0.9rem; }
-    .game-day-item .gd-date { font-size:0.75rem; color:var(--text-dim); }
-    .game-day-item .gd-score { font-size:0.75rem; color:var(--gold); background:rgba(217,180,87,0.1); padding:2px 7px; border-radius:10px; }
-
-    /* ─── DETAIL PANEL ─── */
-    .panel-right { background:var(--card); border:1px solid var(--border); border-radius:12px; }
-    .detail-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-    .detail-header h3 { font-size:1rem; font-weight:600; }
-    .detail-actions { display:flex; gap:8px; }
-    .btn-edit, .btn-save, .btn-cancel, .btn-delete {
-      border:none; border-radius:6px; padding:7px 14px; font-size:0.8rem;
-      font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s; display:flex; align-items:center; gap:4px;
-    }
-    .btn-edit { background:var(--card2); color:var(--text); border:1px solid var(--border); }
-    .btn-edit:hover { border-color:var(--gold); color:var(--gold); }
-    .btn-save { background:var(--green); color:#fff; }
-    .btn-save:hover { background:#27ae60; }
-    .btn-cancel { background:var(--card2); color:var(--text-dim); border:1px solid var(--border); }
-    .btn-cancel:hover { border-color:var(--red); color:var(--red); }
-    .btn-delete { background:transparent; color:var(--red); border:1px solid rgba(231,76,60,0.3); }
-    .btn-delete:hover { background:var(--red); color:#fff; }
-
-    .detail-body { padding:20px; }
-    .detail-meta { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
-    .detail-meta label { font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:3px; }
-    .detail-meta input[type=text], .detail-meta input[type=number] {
-      background:var(--dark2); border:1px solid var(--border); color:var(--text);
-      border-radius:6px; padding:7px 10px; font-family:inherit; font-size:0.85rem;
-      outline:none; transition:border-color 0.2s;
-    }
-    .detail-meta input:focus { border-color:var(--gold); }
-
-    /* ─── GAMES TABLE ─── */
-    .games-table-wrap { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; font-size:0.82rem; }
-    thead th {
-      padding:10px 8px; text-align:center; font-weight:600; font-size:0.72rem;
-      text-transform:uppercase; letter-spacing:0.4px; color:var(--text-dim);
-      border-bottom:2px solid var(--border); white-space:nowrap;
-    }
-    thead th.hori-col { color:var(--hori); }
-    thead th.tami-col { color:var(--tami); }
-    tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
-    tbody tr:hover { background:rgba(255,255,255,0.03); }
-    tbody tr.total-row { background:rgba(217,180,87,0.05); border-top:2px solid var(--border); }
-    tbody td { padding:8px; text-align:center; }
-    tbody td.game-num { font-weight:600; color:var(--text-dim); font-size:0.75rem; }
-    tbody td.rank-cell { font-weight:600; }
-    .rank-1 { color:var(--gold); }
-    .rank-top3 { color:var(--green); }
-
-    /* editable cells */
-    .editable { outline:none; }
-    .edit-mode .editable {
-      background:var(--dark2); border:1px solid var(--border); border-radius:4px;
-      padding:4px 6px; color:var(--text); font-family:inherit; font-size:0.82rem;
-      width:60px; text-align:center;
-    }
-    .edit-mode .editable:focus { border-color:var(--gold); }
-
-    /* ─── DAY SUMMARY BARS ─── */
-    .day-summary { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-top:20px; }
-    .day-stat { background:var(--dark2); border-radius:8px; padding:12px 14px; }
-    .day-stat .ds-label { font-size:0.7rem; color:var(--text-dim); margin-bottom:3px; }
-    .day-stat .ds-val { font-size:1.1rem; font-weight:600; }
-    .day-stat .ds-sub { font-size:0.7rem; color:var(--text-dim); margin-top:1px; }
-
-    /* ─── EMPTY / LOADING ─── */
-    .empty-state { text-align:center; padding:60px 20px; color:var(--text-dim); }
-    .empty-state i { font-size:2.5rem; margin-bottom:12px; display:block; }
-    .toast {
-      position:fixed; bottom:24px; right:24px; background:var(--green); color:#fff;
-      padding:12px 20px; border-radius:8px; font-size:0.85rem; font-weight:500;
-      box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:9998;
-      transform:translateY(100px); opacity:0; transition:all 0.3s;
-    }
-    .toast.show { transform:translateY(0); opacity:1; }
-    .toast.error { background:var(--red); }
-
-    .total-computed {
-      display: inline-block;
-      color: var(--gold);
-      font-weight: 600;
-      min-width: 40px;
-    }
-
-    /* scrollbar */
-    ::-webkit-scrollbar { width:6px; height:6px; }
-    ::-webkit-scrollbar-track { background:var(--dark); }
-    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-
-    @media(max-width:900px) {
-      .panel-row { grid-template-columns:1fr; }
-      .overall-grid { grid-template-columns:repeat(2,1fr); }
-    }
-    @media(max-width:500px) {
-      .main-wrap { padding:12px; }
-      .overall-grid { grid-template-columns:1fr 1fr; }
+    @media(max-width:700px){
+      .summary-row{grid-template-columns:1fr;}
+      .main-wrap{padding:12px;}
     }
   </style>
 </head>
 <body>
 
-<!-- ─── LOGIN ─── -->
+<!-- DAY POPUP -->
+<div id="day-popup-overlay" onclick="if(event.target===this)closeDayPopup()">
+  <div class="day-popup">
+    <div class="day-popup-header">
+      <div class="day-popup-title" id="popup-title">—</div>
+      <button class="day-popup-close" onclick="closeDayPopup()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="day-popup-body">
+      <div class="popup-summary" id="popup-summary"></div>
+      <div class="tbl-wrap">
+        <table class="gtbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="hc">hori Kill</th>
+              <th class="hc">hori Dmg</th>
+              <th class="tc">tami64 Kill</th>
+              <th class="tc">tami64 Dmg</th>
+              <th>Rank</th>
+              <th class="hc">H.Score</th>
+              <th class="tc">T.Score</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="popup-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
 <div id="login-overlay">
   <div class="login-box">
     <div class="login-logo">Hori<span>verse</span></div>
@@ -247,7 +225,7 @@
   </div>
 </div>
 
-<!-- ─── APP ─── -->
+<!-- APP -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">Hori<span>verse</span></div>
@@ -259,16 +237,74 @@
 
   <div class="main-wrap">
 
-    <!-- OVERALL -->
+    <!-- SUMMARY PANELS -->
     <div class="section-title"><i class="fas fa-chart-bar"></i> Overall Statistics</div>
-    <div id="overall-grid" style="margin-bottom:32px">
-      <div style="color:var(--text-dim);padding:20px">Loading...</div>
+    <div class="summary-row">
+      <!-- General -->
+      <div class="panel">
+        <div class="panel-title">General</div>
+        <table class="gen-stats" id="gen-stats-tbl">
+          <tr><td>Days Since Start</td><td id="s-days-since">—</td></tr>
+          <tr><td>Game Days Played</td><td id="s-days-played">—</td></tr>
+          <tr><td>Total Games</td><td id="s-total-games">—</td></tr>
+          <tr><td>Wins</td><td id="s-wins">—</td></tr>
+          <tr><td>Win Rate</td><td id="s-win-rate">—</td></tr>
+          <tr><td>Top 3 Finishes</td><td id="s-top3">—</td></tr>
+          <tr><td>Top 3 Rate</td><td id="s-top3-rate">—</td></tr>
+        </table>
+      </div>
+
+      <!-- Best Performances -->
+      <div class="panel">
+        <div class="panel-title">Best Performances</div>
+        <table class="best-table" id="best-tbl">
+          <tr><td class="bl">Best Team Kill Day</td><td class="bv" id="b-kills">—</td></tr>
+          <tr><td class="bl">Best Team Avg Damage Day</td><td class="bv" id="b-dmg">—</td></tr>
+          <tr><td class="bl">Best Team Score Day</td><td class="bv" id="b-score">—</td></tr>
+          <tr><td class="bl">Best Avg Rank Day</td><td class="bv" id="b-rank">—</td></tr>
+          <tr><td class="bl">Best Game Ever</td><td class="bv" id="b-best">—</td></tr>
+          <tr><td class="bl">horizon1710 Best Game</td><td class="bv" style="color:var(--hori)" id="b-hori-best">—</td></tr>
+          <tr><td class="bl">tami64 Best Game</td><td class="bv" id="b-tami-best">—</td></tr>
+        </table>
+      </div>
+
+      <!-- Hori vs Tami -->
+      <div class="panel">
+        <div class="panel-title">horizon1710 vs tami64</div>
+        <table class="cmp-table">
+          <thead>
+            <tr><th></th><th class="th-h">horizon1710</th><th></th><th class="th-t">tami64</th></tr>
+          </thead>
+          <tbody id="cmp-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="section-title"><i class="fas fa-chart-line"></i> Historical Charts</div>
+    <div class="charts-row">
+      <div class="chart-panel">
+        <div class="panel-title">Kills per Game Day (horizon1710 vs tami64)</div>
+        <div class="chart-wrap"><canvas id="chart-kills"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <div class="panel-title">Avg Damage per Game Day</div>
+        <div class="chart-wrap"><canvas id="chart-damage"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <div class="panel-title">Avg Rank per Game Day (lower is better)</div>
+        <div class="chart-wrap"><canvas id="chart-rank"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <div class="panel-title">Team Score per Game Day</div>
+        <div class="chart-wrap"><canvas id="chart-score"></canvas></div>
+      </div>
     </div>
 
     <!-- GAME DAYS -->
     <div class="section-title"><i class="fas fa-calendar-alt"></i> Game Days</div>
-    <div class="panel-row">
-      <div class="panel-left">
+    <div class="gd-row" id="gd-row">
+      <div class="panel-left" id="panel-left">
         <div class="panel-left-header">
           <h3>Game Day List</h3>
           <button class="add-day-btn" onclick="newGameDay()"><i class="fas fa-plus"></i> New</button>
@@ -276,26 +312,31 @@
         <div class="game-day-list" id="gd-list"></div>
       </div>
       <div class="panel-right" id="detail-panel">
-        <div class="empty-state">
-          <i class="fas fa-hand-pointer"></i>
-          <div>Select a Game Day or add a new one</div>
-        </div>
+        <div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>
       </div>
     </div>
 
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── STATE ───────────────────────────────────────────
+// ── STATE ──────────────────────────────────────────────
 let statsData = null;
 let selectedGD = null;
 let editMode = false;
 let isNew = false;
+let charts = {};
 
-// ─── LOGIN ───────────────────────────────────────────
+// ── SCORE FORMULA ──────────────────────────────────────
+function calcScore(kill, dmg, rank) {
+  const k = Number(kill) || 0;
+  const d = Number(dmg) || 0;
+  const r = Number(rank) || 0;
+  return parseFloat(((k * 0.5 + d / 100 * 0.2 + (51 - r) / 5 * 0.3) / 10).toFixed(2));
+}
+
+// ── LOGIN ──────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') doLogin();
 });
@@ -306,169 +347,180 @@ async function doLogin() {
   const err = document.getElementById('login-error');
   err.style.display = 'none';
   try {
-    const r = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    if (r.ok) {
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      loadStats();
-    } else {
-      err.style.display = 'block';
-    }
-  } catch {
-    err.style.display = 'block';
-  }
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username, password}) });
+    if (r.ok) { document.getElementById('login-overlay').style.display='none'; document.getElementById('app').style.display='block'; loadStats(); }
+    else err.style.display = 'block';
+  } catch { err.style.display = 'block'; }
 }
 
-async function doLogout() {
-  await fetch('/api/logout', { method: 'POST' });
-  location.reload();
-}
+async function doLogout() { await fetch('/api/logout', {method:'POST'}); location.reload(); }
 
-// ─── DATA ────────────────────────────────────────────
+// ── DATA ───────────────────────────────────────────────
 async function loadStats() {
   try {
     const r = await fetch('/api/stats');
     if (r.status === 401) { location.reload(); return; }
     const body = await r.json();
     if (!r.ok) {
-      document.getElementById('overall-grid').innerHTML =
-        `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
-          <strong>API Error ${r.status}:</strong> ${body.error || 'Unknown error'}<br>
-          <span style="color:var(--text-dim);font-size:0.75rem">Check Vercel env vars: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO</span>
-        </div>`;
+      showError(`API Error ${r.status}: ${body.error || 'Unknown'} — Check Vercel env vars: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO`);
       return;
     }
     statsData = body;
-    renderOverall(statsData.overall);
-    renderGDList(statsData.game_days);
+    renderOverall(body.overall, body.game_days);
+    renderCharts(body.game_days);
+    renderGDList(body.game_days);
   } catch (e) {
-    document.getElementById('overall-grid').innerHTML =
-      `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
-        <strong>Network error:</strong> ${e.message}
-      </div>`;
+    showError(`Network error: ${e.message}`);
   }
 }
 
-// ─── OVERALL ─────────────────────────────────────────
-function renderOverall(o) {
+function showError(msg) {
+  document.getElementById('overall-grid') && (document.getElementById('overall-grid').innerHTML = '');
+  showToast(msg, true);
+}
+
+// ── OVERALL ────────────────────────────────────────────
+function renderOverall(o, game_days) {
   if (!o) return;
 
-  function parseComp(str) {
-    if (!str) return [50, 0, 50];
-    const m = str.match(/H: %(\d+\.?\d*), Eq:%(\d+\.?\d*), T: %(\d+\.?\d*)/);
-    return m ? [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])] : [50, 0, 50];
+  // Days since start & days played
+  if (game_days && game_days.length > 0) {
+    const dates = game_days
+      .map(g => g.date)
+      .filter(Boolean)
+      .map(d => { const [day,mon,yr] = d.split('.'); return new Date(yr, mon-1, day); })
+      .filter(d => !isNaN(d));
+    if (dates.length > 0) {
+      const first = new Date(Math.min(...dates));
+      const today = new Date();
+      const daysSince = Math.floor((today - first) / 86400000);
+      document.getElementById('s-days-since').textContent = `${daysSince} days`;
+      document.getElementById('s-days-played').textContent = `${game_days.length} days`;
+    }
   }
 
-  const hp = parseComp(o.hp_comparison);
-  const kl = parseComp(o.kill_comparison);
+  // General
+  document.getElementById('s-total-games').textContent = o.total_games_played;
+  document.getElementById('s-wins').textContent = o.total_wins;
+  document.getElementById('s-win-rate').textContent = o.win_rate;
+  document.getElementById('s-top3').textContent = o.total_top3;
+  document.getElementById('s-top3-rate').textContent = o.top3_rate;
 
-  function bar(seg) {
-    return `<div class="comparison-bar" style="margin-top:6px">
-      <div class="hori-seg" style="width:${seg[0]}%"></div>
-      <div class="eq-seg" style="width:${seg[1]}%"></div>
-      <div class="tami-seg" style="width:${seg[2]}%"></div>
+  // Bests (clickable)
+  makeBestClickable(o.team_total_kill_best || '—', 'b-kills');
+  makeBestClickable(o.team_avg_damage_best || '—', 'b-dmg');
+  makeBestClickable(o.team_avg_score_best || '—', 'b-score');
+  makeBestClickable(o.team_avg_rank_best || '—', 'b-rank');
+  makeBestClickable(o.best_game_ever || '—', 'b-best');
+  makeBestClickable(o.hori_best_game || '—', 'b-hori-best');
+  makeBestClickable(o.tami_best_game || '—', 'b-tami-best');
+
+  // Comparison
+  function bar(hPct, tPct) {
+    const eqPct = Math.max(0, 100 - parseFloat(hPct) - parseFloat(tPct));
+    return `<div class="cmp-bar-wrap">
+      <div class="cmp-bar" style="width:${hPct}%;background:var(--hori)"></div>
+      <div class="cmp-bar" style="width:${eqPct}%;background:var(--text-dim)"></div>
+      <div class="cmp-bar" style="width:${tPct}%;background:var(--tami)"></div>
     </div>`;
   }
-
-  function row(label, common, hori, tami) {
+  const rows = [
+    ['Total Kills', o.hori_total_kills, o.tami_total_kills],
+    ['Kill Avg/game', o.hori_kill_avg, o.tami_kill_avg],
+    ['Max Kill (game)', o.hori_max_kill, o.tami_max_kill],
+    ['Damage Max', o.hori_damage_max, o.tami_damage_max],
+    ['Damage Mean', o.hori_damage_mean, o.tami_damage_mean],
+    ['Damage Median', o.hori_damage_median, o.tami_damage_median],
+    ['Damage Lead %', `${o.hp_h}%`, `${o.hp_t}%`, true, o.hp_h, o.hp_t],
+    ['Kill Lead %', `${o.kl_h}%`, `${o.kl_t}%`, true, o.kl_h, o.kl_t],
+  ];
+  document.getElementById('cmp-tbody').innerHTML = rows.map(r => {
+    const hVal = r[1]; const tVal = r[2];
+    const isBar = r[3];
     return `<tr>
-      <td class="st-label">${label}</td>
-      <td class="st-common">${common ?? '—'}</td>
-      <td class="st-hori">${hori ?? '—'}</td>
-      <td class="st-tami">${tami ?? '—'}</td>
+      <td class="lbl">${r[0]}</td>
+      <td class="hv">${hVal}</td>
+      <td style="width:80px">${isBar ? bar(r[4], r[5]) : ''}</td>
+      <td class="tv">${tVal}</td>
     </tr>`;
-  }
-
-  document.getElementById('overall-grid').innerHTML = `
-    <table class="stats-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="th-common">Common</th>
-          <th class="th-hori">Horizon</th>
-          <th class="th-tami">Tami</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${row('Total Games', o.total_games_played, '—', '—')}
-        ${row('Wins / Win Rate', `${o.total_wins} (${o.win_rate})`, '—', '—')}
-        ${row('Top 3 / Top3 Rate', `${o.total_top3} (${o.top3_rate})`, '—', '—')}
-        ${row('Total Kills', '—', o.hori_total_kills, o.tami_total_kills)}
-        ${row('Kill Avg / game', '—', o.hori_kill_avg, o.tami_kill_avg)}
-        ${row('Max Kills (single game)', '—', o.hori_max_kill, o.tami_max_kill)}
-        ${row('Max Damage (single game)', '—', o.hori_damage_max, o.tami_damage_max)}
-        ${row('Damage Mean / Median', '—', o.hori_damage_mean_median, o.tami_damage_mean_median)}
-        <tr>
-          <td class="st-label">Damage Lead %</td>
-          <td class="st-common" colspan="3">
-            <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem">
-              <span style="color:var(--hori)">Hori %${hp[0]}</span>
-              <div style="flex:1">${bar(hp)}</div>
-              <span style="color:var(--tami)">Tami %${hp[2]}</span>
-              <span style="color:var(--text-dim);font-size:0.72rem">Eq %${hp[1]}</span>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td class="st-label">Kill Lead %</td>
-          <td class="st-common" colspan="3">
-            <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem">
-              <span style="color:var(--hori)">Hori %${kl[0]}</span>
-              <div style="flex:1">${bar(kl)}</div>
-              <span style="color:var(--tami)">Tami %${kl[2]}</span>
-              <span style="color:var(--text-dim);font-size:0.72rem">Eq %${kl[1]}</span>
-            </div>
-          </td>
-        </tr>
-        <tr class="tr-section"><td colspan="4">Best Performances</td></tr>
-        ${row('Best Team Kill Day', o.team_total_kill_best, '—', '—')}
-        ${row('Best Team Avg Damage Day', o.team_avg_damage_best, '—', '—')}
-        ${row('Best Team Score Day', o.team_avg_score_best, '—', '—')}
-        ${row('Best Game Ever', o.best_game_ever, '—', '—')}
-        ${row('Personal Best Game', '—', o.hori_best_game, o.tami_best_game)}
-      </tbody>
-    </table>
-  `;
+  }).join('');
 }
 
-// ─── GAME DAY LIST ───────────────────────────────────
+// ── CHARTS ─────────────────────────────────────────────
+function renderCharts(gds) {
+  const labels = gds.map(g => `D${g.game_no}`);
+  const horiKills = gds.map(g => g.total.hori_kill);
+  const tamiKills = gds.map(g => g.total.tami_kill);
+  const horiDmg   = gds.map(g => g.total.hori_damage);
+  const tamiDmg   = gds.map(g => g.total.tami_damage);
+  const ranks     = gds.map(g => g.total.rank);
+  const scores    = gds.map(g => g.total.score);
+
+  const defaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9090b0', font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { color: '#9090b0', font: { size: 9 }, maxTicksLimit: 20 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      y: { ticks: { color: '#9090b0', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+    },
+  };
+
+  function mkChart(id, datasets, opts = {}) {
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id), {
+      type: 'line',
+      data: { labels, datasets },
+      options: { ...defaults, ...opts },
+    });
+  }
+
+  mkChart('chart-kills', [
+    { label:'horizon1710', data: horiKills, borderColor:'#d9b457', backgroundColor:'rgba(217,180,87,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'tami64', data: tamiKills, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+  ]);
+  mkChart('chart-damage', [
+    { label:'horizon1710 Avg Dmg', data: horiDmg, borderColor:'#d9b457', backgroundColor:'rgba(217,180,87,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'tami64 Avg Dmg', data: tamiDmg, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+  ]);
+  mkChart('chart-rank', [
+    { label:'Avg Rank', data: ranks, borderColor:'#2ecc71', backgroundColor:'rgba(46,204,113,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+  ], { scales: { ...defaults.scales, y: { ...defaults.scales.y, reverse: true } } });
+  mkChart('chart-score', [
+    { label:'Team Score', data: scores, borderColor:'#e5c982', backgroundColor:'rgba(229,201,130,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+  ]);
+}
+
+// ── GAME DAY LIST ──────────────────────────────────────
 function renderGDList(gds) {
   const el = document.getElementById('gd-list');
-  if (!gds || !gds.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:30px"><i class="fas fa-inbox"></i><div>No records yet</div></div>';
-    return;
-  }
-  el.innerHTML = gds.map(gd => {
-    const score = gd.total && gd.total.score ? Number(gd.total.score).toFixed(3) : '—';
+  if (!gds || !gds.length) { el.innerHTML = '<div class="empty-state" style="padding:30px"><i class="fas fa-inbox"></i><div>No records yet</div></div>'; return; }
+  // newest first
+  const sorted = [...gds].reverse();
+  el.innerHTML = sorted.map(gd => {
+    const score = gd.total ? gd.total.score : '—';
     const active = selectedGD && selectedGD.game_no === gd.game_no ? 'active' : '';
     return `<div class="game-day-item ${active}" onclick="selectGD(${gd.game_no})">
       <div>
-        <div class="gd-num">Game Day ${gd.game_no}</div>
+        <div class="gd-num">Day ${gd.game_no}</div>
         <div class="gd-date">${gd.date || '—'}</div>
       </div>
-      <div class="gd-score">${score}</div>
+      <div class="gd-score">${score !== '—' ? score : '—'}</div>
     </div>`;
   }).join('');
 }
 
-// ─── SELECT GAME DAY ─────────────────────────────────
+
+// ── SELECT ─────────────────────────────────────────────
 function selectGD(gno) {
   selectedGD = statsData.game_days.find(g => g.game_no === gno);
-  editMode = false;
-  isNew = false;
+  editMode = false; isNew = false;
   renderGDList(statsData.game_days);
   renderDetail();
 }
 
-// ─── NEW GAME DAY ────────────────────────────────────
+// ── NEW ────────────────────────────────────────────────
 function newGameDay() {
-  const maxNo = statsData.game_days.length > 0
-    ? Math.max(...statsData.game_days.map(g => g.game_no))
-    : 0;
+  const maxNo = statsData.game_days.length > 0 ? Math.max(...statsData.game_days.map(g => g.game_no)) : 0;
   const today = new Date();
   const dd = String(today.getDate()).padStart(2,'0');
   const mm = String(today.getMonth()+1).padStart(2,'0');
@@ -477,48 +529,59 @@ function newGameDay() {
     game_no: maxNo + 1,
     date: `${dd}.${mm}.${yyyy}`,
     best_game: '',
-    games: Array.from({length:10}, (_,i) => ({
-      game: i+1, hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0,
-      rank:0, hori_score:0, tami_score:0, score:0
-    })),
-    total: { hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0, rank:0, hori_score:0, tami_score:0, score:0 }
+    games: Array.from({length:10}, (_,i) => ({ game:i+1, hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0, rank:0 })),
+    total: {},
   };
-  editMode = true;
-  isNew = true;
+  editMode = true; isNew = true;
   renderDetail();
 }
 
-// ─── RENDER DETAIL ───────────────────────────────────
+// ── RENDER DETAIL ──────────────────────────────────────
 function renderDetail() {
   const el = document.getElementById('detail-panel');
   if (!selectedGD) { el.innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>'; return; }
 
   const gd = selectedGD;
   const em = editMode;
+  const t = gd.total || {};
 
-  const totalRow = gd.total || {};
+  function rankCls(r) { const n=Number(r); return n===1?'rank-1':n<=3?'rank-top3':''; }
 
-  function cell(key, obj, cls='') {
-    const v = obj[key] !== undefined && obj[key] !== null ? obj[key] : '';
-    const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : parseFloat(v.toFixed(4))) : v;
-    if (em) return `<input class="editable" data-key="${key}" value="${disp}" type="text" inputmode="decimal" oninput="recalcTotal()">`;
-    return `<span class="${cls}">${disp !== '' ? disp : '—'}</span>`;
+  function viewCell(v, decimals=0) {
+    const n = Number(v);
+    if (isNaN(n) || v === null || v === undefined) return '—';
+    return decimals ? n.toFixed(decimals) : n;
   }
 
-  function totalCell(key) {
-    // in edit mode: read-only computed cell
-    const v = totalRow[key];
-    const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : parseFloat(v.toFixed(4))) : (v ?? '—');
-    if (em) return `<span class="total-computed" id="tc-${key}">${disp}</span>`;
-    return `<span>${disp !== undefined && disp !== null && disp !== '' ? disp : '—'}</span>`;
-  }
-
-  function rankClass(r) {
-    const n = Number(r);
-    if (n === 1) return 'rank-1';
-    if (n <= 3) return 'rank-top3';
-    return '';
-  }
+  const gameRows = gd.games.map((g, idx) => {
+    if (em) {
+      return `<tr data-idx="${idx}">
+        <td class="gn">${g.game}</td>
+        <td><input class="edit-input" data-key="hori_kill" data-idx="${idx}" value="${g.hori_kill ?? 0}" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="hori_damage" data-idx="${idx}" value="${g.hori_damage ?? 0}" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="tami_kill" data-idx="${idx}" value="${g.tami_kill ?? 0}" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="tami_damage" data-idx="${idx}" value="${g.tami_damage ?? 0}" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="rank" data-idx="${idx}" value="${g.rank ?? 0}" oninput="onCellInput(this)"></td>
+        <td><span class="total-computed" id="hs-${idx}"></span></td>
+        <td><span class="total-computed" id="ts-${idx}"></span></td>
+        <td><span class="total-computed" id="sc-${idx}"></span></td>
+      </tr>`;
+    }
+    const hs = calcScore(g.hori_kill, g.hori_damage, g.rank);
+    const ts = calcScore(g.tami_kill, g.tami_damage, g.rank);
+    const sc = ((hs+ts)/2).toFixed(2);
+    return `<tr>
+      <td class="gn">${g.game}</td>
+      <td>${viewCell(g.hori_kill)}</td>
+      <td>${viewCell(g.hori_damage)}</td>
+      <td>${viewCell(g.tami_kill)}</td>
+      <td>${viewCell(g.tami_damage)}</td>
+      <td class="${rankCls(g.rank)}">${viewCell(g.rank)}</td>
+      <td style="color:var(--hori)">${hs.toFixed(2)}</td>
+      <td style="color:var(--tami)">${ts.toFixed(2)}</td>
+      <td>${sc}</td>
+    </tr>`;
+  }).join('');
 
   el.innerHTML = `
     <div class="detail-header">
@@ -533,148 +596,151 @@ function renderDetail() {
         `}
       </div>
     </div>
-    <div class="detail-body ${em ? 'edit-mode' : ''}">
+    <div class="detail-body">
       <div class="detail-meta">
-        <div>
+        <div class="mf">
           <label>Game No</label>
-          ${em ? `<input type="text" inputmode="numeric" id="meta-gno" value="${gd.game_no}" style="width:80px">` : `<strong>${gd.game_no}</strong>`}
+          ${em ? `<input class="meta-input" type="text" inputmode="numeric" id="meta-gno" value="${gd.game_no}" style="width:70px">` : `<strong>${gd.game_no}</strong>`}
         </div>
-        <div>
+        <div class="mf">
           <label>Date</label>
-          ${em ? `<input type="text" id="meta-date" value="${gd.date || ''}" placeholder="dd.mm.yyyy" style="width:120px">` : `<strong>${gd.date || '—'}</strong>`}
+          ${em ? `<input class="meta-input" type="text" id="meta-date" value="${gd.date || ''}" placeholder="dd.mm.yyyy" style="width:110px">` : `<strong>${gd.date || '—'}</strong>`}
         </div>
-        <div>
+        <div class="mf">
           <label>Best Game</label>
-          ${em ? `<input type="text" id="meta-best" value="${gd.best_game || ''}" placeholder="Game 7" style="width:180px">` : `<strong>${gd.best_game || '—'}</strong>`}
+          ${em ? `<input class="meta-input" type="text" id="meta-best" value="${gd.best_game || ''}" placeholder="Game 7" style="width:160px">` : `<strong>${gd.best_game || '—'}</strong>`}
         </div>
       </div>
-
-      <div class="games-table-wrap">
-        <table id="games-table">
+      <div id="save-err" class="err-msg"></div>
+      <div class="tbl-wrap">
+        <table class="gtbl">
           <thead>
             <tr>
               <th>#</th>
-              <th class="hori-col">Hori Kill</th>
-              <th class="hori-col">Hori Dmg</th>
-              <th class="tami-col">Tami Kill</th>
-              <th class="tami-col">Tami Dmg</th>
+              <th class="hc">horizon1710 Kill</th>
+              <th class="hc">horizon1710 Dmg</th>
+              <th class="tc">tami64 Kill</th>
+              <th class="tc">tami64 Dmg</th>
               <th>Rank</th>
-              <th class="hori-col">Hori Score</th>
-              <th class="tami-col">Tami Score</th>
+              <th class="hc">H.Score</th>
+              <th class="tc">T.Score</th>
               <th>Score</th>
             </tr>
           </thead>
-          <tbody id="games-tbody">
-            ${gd.games.map((g, idx) => `
-              <tr data-idx="${idx}">
-                <td class="game-num">${g.game}</td>
-                <td>${cell('hori_kill', g)}</td>
-                <td>${cell('hori_damage', g)}</td>
-                <td>${cell('tami_kill', g)}</td>
-                <td>${cell('tami_damage', g)}</td>
-                <td class="rank-cell">${em ? cell('rank', g) : `<span class="${rankClass(g.rank)}">${g.rank !== undefined ? g.rank : '—'}</span>`}</td>
-                <td>${cell('hori_score', g)}</td>
-                <td>${cell('tami_score', g)}</td>
-                <td>${cell('score', g)}</td>
-              </tr>
-            `).join('')}
-            <tr class="total-row" id="total-row">
-              <td class="game-num" style="color:var(--gold)">Σ</td>
-              <td>${totalCell('hori_kill')}</td>
-              <td>${totalCell('hori_damage')}</td>
-              <td>${totalCell('tami_kill')}</td>
-              <td>${totalCell('tami_damage')}</td>
-              <td>${totalCell('rank')}</td>
-              <td>${totalCell('hori_score')}</td>
-              <td>${totalCell('tami_score')}</td>
-              <td>${totalCell('score')}</td>
+          <tbody id="games-tbody">${gameRows}</tbody>
+          <tbody>
+            <tr class="total-row">
+              <td class="gn" style="color:var(--gold)">Σ/Avg</td>
+              <td><span class="total-computed" id="tc-hori_kill">${viewCell(t.hori_kill)}</span></td>
+              <td><span class="total-computed" id="tc-hori_damage">${viewCell(t.hori_damage)}</span></td>
+              <td><span class="total-computed" id="tc-tami_kill">${viewCell(t.tami_kill)}</span></td>
+              <td><span class="total-computed" id="tc-tami_damage">${viewCell(t.tami_damage)}</span></td>
+              <td><span class="total-computed" id="tc-rank">${viewCell(t.rank, 1)}</span></td>
+              <td><span class="total-computed" id="tc-hori_score">${t.hori_score ?? '—'}</span></td>
+              <td><span class="total-computed" id="tc-tami_score">${t.tami_score ?? '—'}</span></td>
+              <td><span class="total-computed" id="tc-score">${t.score ?? '—'}</span></td>
             </tr>
           </tbody>
         </table>
       </div>
-
       ${!em ? renderDaySummary(gd) : ''}
     </div>
   `;
+
+  if (em) recalcTotal();
 }
 
-function renderDaySummary(gd) {
-  const t = gd.total || {};
-  const games = gd.games || [];
-  const wins = games.filter(g => Number(g.rank) === 1).length;
-  const top3 = games.filter(g => Number(g.rank) <= 3 && Number(g.rank) > 0).length;
-  const avgRank = games.reduce((s,g) => s + (Number(g.rank)||0), 0) / (games.length || 1);
-  return `
-    <div class="day-summary">
-      <div class="day-stat">
-        <div class="ds-label">Hori Total Kills</div>
-        <div class="ds-val" style="color:var(--hori)">${t.hori_kill !== undefined ? t.hori_kill : '—'}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Tami Total Kills</div>
-        <div class="ds-val" style="color:var(--tami)">${t.tami_kill !== undefined ? t.tami_kill : '—'}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Hori Avg Damage</div>
-        <div class="ds-val" style="color:var(--hori)">${t.hori_damage !== undefined ? Number(t.hori_damage).toFixed(1) : '—'}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Tami Avg Damage</div>
-        <div class="ds-val" style="color:var(--tami)">${t.tami_damage !== undefined ? Number(t.tami_damage).toFixed(1) : '—'}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Wins</div>
-        <div class="ds-val" style="color:var(--green)">${wins}</div>
-        <div class="ds-sub">Top3: ${top3}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Avg Rank</div>
-        <div class="ds-val">${avgRank.toFixed(1)}</div>
-      </div>
-      <div class="day-stat">
-        <div class="ds-label">Team Score</div>
-        <div class="ds-val" style="color:var(--gold)">${t.score !== undefined ? Number(t.score).toFixed(4) : '—'}</div>
-      </div>
-    </div>
-  `;
+// ── CELL INPUT ─────────────────────────────────────────
+function onCellInput(inp) {
+  validateInput(inp);
+  recalcTotal();
 }
 
-// ─── EDIT ────────────────────────────────────────────
-function startEdit() { editMode = true; renderDetail(); }
+const RULES = {
+  hori_kill:   { min:0, max:30, int:true },
+  tami_kill:   { min:0, max:30, int:true },
+  hori_damage: { min:0, max:3000, int:true },
+  tami_damage: { min:0, max:3000, int:true },
+  rank:        { min:1, max:100, int:true },
+};
 
-function cancelEdit() {
-  if (isNew) { selectedGD = null; isNew = false; editMode = false; renderDetail(); return; }
-  editMode = false;
-  renderDetail();
+function validateInput(inp) {
+  const key = inp.dataset.key;
+  const rule = RULES[key];
+  if (!rule) return true;
+  const v = inp.value.trim();
+  const n = Number(v);
+  const bad = v === '' || isNaN(n) || (rule.int && !Number.isInteger(n)) || n < rule.min || n > rule.max;
+  inp.classList.toggle('err', bad);
+  return !bad;
 }
 
 function recalcTotal() {
-  const tbody = document.getElementById('games-tbody');
-  if (!tbody) return;
-  const rows = tbody.querySelectorAll('tr[data-idx]');
-  const sums = { hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0, rank:0, hori_score:0, tami_score:0, score:0 };
+  const rows = document.querySelectorAll('#games-tbody tr[data-idx]');
+  let sumHK=0, sumHD=0, sumTK=0, sumTD=0, sumRank=0, sumHS=0, sumTS=0, sumSC=0;
+  let validRows = 0;
+
   rows.forEach(row => {
-    row.querySelectorAll('input.editable').forEach(inp => {
-      const k = inp.dataset.key;
-      if (k in sums) sums[k] += parseFloat(inp.value) || 0;
-    });
+    const get = k => { const el = row.querySelector(`[data-key="${k}"]`); return el ? Number(el.value)||0 : 0; };
+    const hk=get('hori_kill'), hd=get('hori_damage'), tk=get('tami_kill'), td=get('tami_damage'), rk=get('rank');
+    const hs = calcScore(hk, hd, rk);
+    const ts = calcScore(tk, td, rk);
+    const sc = (hs+ts)/2;
+    const idx = row.dataset.idx;
+    const hsel = document.getElementById(`hs-${idx}`);
+    const tsel = document.getElementById(`ts-${idx}`);
+    const scel = document.getElementById(`sc-${idx}`);
+    if (hsel) hsel.textContent = hs.toFixed(2);
+    if (tsel) tsel.textContent = ts.toFixed(2);
+    if (scel) scel.textContent = sc.toFixed(2);
+    sumHK+=hk; sumHD+=hd; sumTK+=tk; sumTD+=td; sumRank+=rk;
+    sumHS+=hs; sumTS+=ts; sumSC+=sc;
+    validRows++;
   });
-  const n = rows.length || 1;
-  // kills: sum | damage: avg | rank: avg | scores: avg
-  const display = {
-    hori_kill: sums.hori_kill,
-    hori_damage: parseFloat((sums.hori_damage / n).toFixed(1)),
-    tami_kill: sums.tami_kill,
-    tami_damage: parseFloat((sums.tami_damage / n).toFixed(1)),
-    rank: parseFloat((sums.rank / n).toFixed(1)),
-    hori_score: parseFloat((sums.hori_score / n).toFixed(4)),
-    tami_score: parseFloat((sums.tami_score / n).toFixed(4)),
-    score: parseFloat((sums.score / n).toFixed(4)),
-  };
-  Object.entries(display).forEach(([k, v]) => {
-    const el = document.getElementById(`tc-${k}`);
-    if (el) el.textContent = v;
-  });
+
+  const n = validRows || 1;
+  const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('tc-hori_kill',   sumHK);
+  set('tc-hori_damage', Math.round(sumHD / n));
+  set('tc-tami_kill',   sumTK);
+  set('tc-tami_damage', Math.round(sumTD / n));
+  set('tc-rank',        (sumRank/n).toFixed(1));
+  set('tc-hori_score',  (sumHS/n).toFixed(2));
+  set('tc-tami_score',  (sumTS/n).toFixed(2));
+  set('tc-score',       (sumSC/n).toFixed(2));
+}
+
+// ── DAY SUMMARY ────────────────────────────────────────
+function renderDaySummary(gd) {
+  const games = gd.games || [];
+  const n = games.length || 1;
+  const wins = games.filter(g => Number(g.rank)===1).length;
+  const top3 = games.filter(g => Number(g.rank)<=3 && Number(g.rank)>0).length;
+  const avgRank = games.reduce((s,g)=>s+(Number(g.rank)||0),0)/n;
+  const horiKills = games.reduce((s,g)=>s+(Number(g.hori_kill)||0),0);
+  const tamiKills = games.reduce((s,g)=>s+(Number(g.tami_kill)||0),0);
+  const avgHoriDmg = Math.round(games.reduce((s,g)=>s+(Number(g.hori_damage)||0),0)/n);
+  const avgTamiDmg = Math.round(games.reduce((s,g)=>s+(Number(g.tami_damage)||0),0)/n);
+  const t = gd.total || {};
+  return `<div class="day-summary">
+    <div class="day-stat"><div class="ds-label">horizon1710 Kills</div><div class="ds-val" style="color:var(--hori)">${horiKills}</div></div>
+    <div class="day-stat"><div class="ds-label">tami64 Kills</div><div class="ds-val" style="color:var(--tami)">${tamiKills}</div></div>
+    <div class="day-stat"><div class="ds-label">horizon1710 Avg Dmg</div><div class="ds-val" style="color:var(--hori)">${avgHoriDmg}</div></div>
+    <div class="day-stat"><div class="ds-label">tami64 Avg Dmg</div><div class="ds-val" style="color:var(--tami)">${avgTamiDmg}</div></div>
+    <div class="day-stat"><div class="ds-label">Wins</div><div class="ds-val" style="color:var(--green)">${wins}</div><div class="ds-sub">Top3: ${top3}</div></div>
+    <div class="day-stat"><div class="ds-label">Avg Rank</div><div class="ds-val">${avgRank.toFixed(1)}</div></div>
+    <div class="day-stat"><div class="ds-label">Team Score</div><div class="ds-val" style="color:var(--gold)">${t.score ?? '—'}</div></div>
+    <div class="day-stat"><div class="ds-label">horizon1710 Score</div><div class="ds-val" style="color:var(--hori)">${t.hori_score ?? '—'}</div></div>
+    <div class="day-stat"><div class="ds-label">tami64 Score</div><div class="ds-val" style="color:var(--tami)">${t.tami_score ?? '—'}</div></div>
+  </div>`;
+}
+
+// ── EDIT ───────────────────────────────────────────────
+function startEdit() { editMode=true; renderDetail(); }
+
+function cancelEdit() {
+  if (isNew) { selectedGD=null; isNew=false; editMode=false; renderDetail(); return; }
+  editMode=false; renderDetail();
 }
 
 function collectEditedData() {
@@ -682,40 +748,55 @@ function collectEditedData() {
   const date = document.getElementById('meta-date').value.trim();
   const best = document.getElementById('meta-best').value.trim();
 
-  const tbody = document.getElementById('games-tbody');
-  const rows = tbody.querySelectorAll('tr[data-idx]');
+  const rows = document.querySelectorAll('#games-tbody tr[data-idx]');
   const games = [];
   rows.forEach((row, idx) => {
-    const inputs = row.querySelectorAll('input.editable');
-    const g = { game: idx + 1 };
-    inputs.forEach(inp => { g[inp.dataset.key] = parseFloat(inp.value) || 0; });
-    games.push(g);
+    const get = k => { const el=row.querySelector(`[data-key="${k}"]`); return el ? Number(el.value)||0 : 0; };
+    games.push({
+      game: idx+1,
+      hori_kill:   get('hori_kill'),
+      hori_damage: get('hori_damage'),
+      tami_kill:   get('tami_kill'),
+      tami_damage: get('tami_damage'),
+      rank:        get('rank'),
+    });
   });
+  return { game_no: gno, date, best_game: best, games };
+}
 
-  // collect computed totals from the display spans
-  const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank','hori_score','tami_score','score'];
-  const total = {};
-  keys.forEach(k => {
-    const el = document.getElementById(`tc-${k}`);
-    total[k] = el ? parseFloat(el.textContent) || 0 : 0;
+function validateAll() {
+  const inputs = document.querySelectorAll('.edit-input');
+  let ok = true;
+  inputs.forEach(inp => { if (!validateInput(inp)) ok = false; });
+
+  // check no row is entirely zero (all 5 fields zero = not filled)
+  const rows = document.querySelectorAll('#games-tbody tr[data-idx]');
+  const emptyRows = [];
+  rows.forEach(row => {
+    const keys = ['hori_kill','hori_damage','tami_kill','tami_damage','rank'];
+    const allZero = keys.every(k => { const el=row.querySelector(`[data-key="${k}"]`); return !el || Number(el.value)===0; });
+    if (allZero) emptyRows.push(Number(row.dataset.idx)+1);
   });
+  if (emptyRows.length > 0) {
+    showSaveErr(`Game(s) ${emptyRows.join(', ')} have no data. Fill in or set rank at least.`);
+    ok = false;
+  }
+  return ok;
+}
 
-  return { game_no: gno, date, best_game: best, games, total };
+function showSaveErr(msg) {
+  const el = document.getElementById('save-err');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
 async function saveGD() {
+  document.getElementById('save-err') && (document.getElementById('save-err').style.display='none');
+  if (!validateAll()) return;
   const game_day = collectEditedData();
   try {
-    const r = await fetch('/api/stats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'save_game_day', game_day })
-    });
+    const r = await fetch('/api/stats', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'save_game_day', game_day}) });
     if (!r.ok) { showToast('Save failed', true); return; }
-    const result = await r.json();
-    selectedGD = game_day;
-    editMode = false;
-    isNew = false;
+    editMode=false; isNew=false;
     await loadStats();
     selectGD(game_day.game_no);
     showToast('Game Day saved!');
@@ -725,50 +806,95 @@ async function saveGD() {
 async function deleteGD() {
   if (!confirm(`Delete Game Day ${selectedGD.game_no}?`)) return;
   try {
-    const r = await fetch('/api/stats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_game_day', game_day: { game_no: selectedGD.game_no } })
-    });
+    const r = await fetch('/api/stats', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'delete_game_day', game_day:{game_no:selectedGD.game_no}}) });
     if (!r.ok) { showToast('Delete failed', true); return; }
-    selectedGD = null;
+    selectedGD=null;
     await loadStats();
     document.getElementById('detail-panel').innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i><div>Select a Game Day</div></div>';
     showToast('Game Day deleted');
   } catch { showToast('An error occurred', true); }
 }
 
-// ─── TOAST ───────────────────────────────────────────
+// ── DAY POPUP ──────────────────────────────────────────
+function openDayPopup(gameNo) {
+  if (!statsData) return;
+  const gd = statsData.game_days.find(g => g.game_no === Number(gameNo));
+  if (!gd) return;
+  const n = (gd.games || []).length || 1;
+  function cs(k,d,r) {
+    return parseFloat(((Number(k)*0.5 + Number(d)/100*0.2 + (51-Number(r))/5*0.3)/10).toFixed(2));
+  }
+  const rows = gd.games.map(g => {
+    const hs = cs(g.hori_kill, g.hori_damage, g.rank);
+    const ts = cs(g.tami_kill, g.tami_damage, g.rank);
+    const sc = parseFloat(((hs+ts)/2).toFixed(2));
+    const rCls = g.rank===1?'rank-1':g.rank<=3?'rank-top3':'';
+    return `<tr>
+      <td class="gn">${g.game}</td>
+      <td style="color:var(--hori)">${g.hori_kill}</td>
+      <td style="color:var(--hori)">${g.hori_damage}</td>
+      <td style="color:var(--tami)">${g.tami_kill}</td>
+      <td style="color:var(--tami)">${g.tami_damage}</td>
+      <td class="${rCls}">${g.rank}</td>
+      <td style="color:var(--hori)">${hs}</td>
+      <td style="color:var(--tami)">${ts}</td>
+      <td style="color:var(--gold)">${sc}</td>
+    </tr>`;
+  }).join('');
+  const sumHK = gd.games.reduce((s,g)=>s+(g.hori_kill||0),0);
+  const sumTK = gd.games.reduce((s,g)=>s+(g.tami_kill||0),0);
+  const avgHD = Math.round(gd.games.reduce((s,g)=>s+(g.hori_damage||0),0)/n);
+  const avgTD = Math.round(gd.games.reduce((s,g)=>s+(g.tami_damage||0),0)/n);
+  const avgR  = (gd.games.reduce((s,g)=>s+(g.rank||0),0)/n).toFixed(1);
+  document.getElementById('popup-title').textContent = `Day ${gd.game_no} — ${gd.date}${gd.best_game ? ' · Best: '+gd.best_game : ''}`;
+  document.getElementById('popup-tbody').innerHTML = rows;
+  document.getElementById('popup-summary').innerHTML = `
+    <span style="color:var(--hori)">horizon1710 Kills: ${sumHK}</span> &nbsp;·&nbsp;
+    <span style="color:var(--tami)">tami64 Kills: ${sumTK}</span> &nbsp;·&nbsp;
+    <span style="color:var(--hori)">Avg Dmg: ${avgHD}</span> &nbsp;·&nbsp;
+    <span style="color:var(--tami)">Avg Dmg: ${avgTD}</span> &nbsp;·&nbsp;
+    Avg Rank: ${avgR}
+  `;
+  document.getElementById('day-popup-overlay').style.display = 'flex';
+}
+function closeDayPopup() {
+  document.getElementById('day-popup-overlay').style.display = 'none';
+}
+
+function makeBestClickable(text, elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const m = text.match(/Day (\d+)/);
+  if (m) {
+    el.innerHTML = text.replace(/Day (\d+)/g, (_, n) => `<span class="day-link" onclick="openDayPopup(${n})">Day ${n}</span>`);
+  } else {
+    el.textContent = text;
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────
 function showToast(msg, error=false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast' + (error ? ' error' : '');
+  t.className = 'toast' + (error?' error':'');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ─── SESSION CHECK ───────────────────────────────────
+// ── SESSION CHECK ──────────────────────────────────────
 (async function checkSession() {
   try {
     const r = await fetch('/api/stats');
-    if (r.status === 401) return; // not logged in, show login screen
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+    if (r.status === 401) return;
+    document.getElementById('login-overlay').style.display='none';
+    document.getElementById('app').style.display='block';
     const body = await r.json();
-    if (!r.ok) {
-      document.getElementById('overall-grid').innerHTML =
-        `<div style="color:var(--red);padding:20px;background:var(--card);border-radius:8px;font-size:0.85rem">
-          <strong>API Error ${r.status}:</strong> ${body.error || 'Unknown'}<br>
-          <span style="color:var(--text-dim);font-size:0.75rem">Check Vercel env vars: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO</span>
-        </div>`;
-      return;
-    }
+    if (!r.ok) { showToast(`API Error: ${body.error}`, true); return; }
     statsData = body;
-    renderOverall(body.overall);
+    renderOverall(body.overall, body.game_days);
+    renderCharts(body.game_days);
     renderGDList(body.game_days);
-  } catch (e) {
-    // network error — stay on login screen
-  }
+  } catch {}
 })();
 </script>
 </body>

@@ -1,0 +1,139 @@
+// Shared calculation logic — imported by stats.js and stats.local.js
+
+// Score formula: (kill*0.5 + damage/100*0.2 + (51-rank)/5*0.3) / 10
+export function calcScore(kill, damage, rank) {
+  const k = Number(kill) || 0;
+  const d = Number(damage) || 0;
+  const r = Number(rank) || 0;
+  return parseFloat(((k * 0.5 + d / 100 * 0.2 + (51 - r) / 5 * 0.3) / 10).toFixed(4));
+}
+
+export function calcGameDay(gd) {
+  const games = (gd.games || []).map(g => ({
+    ...g,
+    hori_score: calcScore(g.hori_kill, g.hori_damage, g.rank),
+    tami_score: calcScore(g.tami_kill, g.tami_damage, g.rank),
+    score: parseFloat(((calcScore(g.hori_kill, g.hori_damage, g.rank) + calcScore(g.tami_kill, g.tami_damage, g.rank)) / 2).toFixed(4)),
+  }));
+
+  const n = games.length || 1;
+  const sum = (key) => games.reduce((s, g) => s + (Number(g[key]) || 0), 0);
+
+  const total = {
+    hori_kill: sum('hori_kill'),
+    hori_damage: Math.round(sum('hori_damage') / n),
+    tami_kill: sum('tami_kill'),
+    tami_damage: Math.round(sum('tami_damage') / n),
+    rank: parseFloat((sum('rank') / n).toFixed(1)),
+    hori_score: parseFloat((sum('hori_score') / n).toFixed(2)),
+    tami_score: parseFloat((sum('tami_score') / n).toFixed(2)),
+    score: parseFloat((sum('score') / n).toFixed(2)),
+  };
+
+  return { ...gd, games, total };
+}
+
+export function recalcOverall(game_days) {
+  let hori_total_kills = 0, tami_total_kills = 0;
+  let total_games_played = 0, total_wins = 0, total_top3 = 0;
+  let hori_damage_sum = 0, tami_damage_sum = 0;
+  let all_hori_dmg = [], all_tami_dmg = [];
+  let hori_max_dmg = 0, tami_max_dmg = 0;
+  let hori_max_kill = 0, tami_max_kill = 0;
+  let hp_h = 0, hp_t = 0, hp_eq = 0;
+  let kl_h = 0, kl_t = 0, kl_eq = 0;
+  let best_score = -1, best_ref = null;
+  let hori_best_score = -1, hori_best_ref = null;
+  let tami_best_score = -1, tami_best_ref = null;
+  let team_kill_best = 0, team_kill_ref = null;
+  let team_dmg_best = 0, team_dmg_ref = null;
+  let team_score_best = -1, team_score_ref = null;
+  let team_rank_best = 999, team_rank_ref = null;
+
+  game_days.forEach(gd => {
+    const enriched = calcGameDay(gd);
+    const games = enriched.games;
+    total_games_played += games.length;
+    let day_hk = 0, day_tk = 0, day_hd = 0, day_td = 0, day_score = 0, day_rank = 0;
+
+    games.forEach(g => {
+      const hk = Number(g.hori_kill) || 0;
+      const tk = Number(g.tami_kill) || 0;
+      const hd = Number(g.hori_damage) || 0;
+      const td = Number(g.tami_damage) || 0;
+      const rank = Number(g.rank) || 99;
+      const hs = g.hori_score;
+      const ts = g.tami_score;
+      const sc = g.score;
+
+      hori_total_kills += hk; tami_total_kills += tk;
+      hori_damage_sum += hd; tami_damage_sum += td;
+      all_hori_dmg.push(hd); all_tami_dmg.push(td);
+      if (hd > hori_max_dmg) hori_max_dmg = hd;
+      if (td > tami_max_dmg) tami_max_dmg = td;
+      if (hk > hori_max_kill) hori_max_kill = hk;
+      if (tk > tami_max_kill) tami_max_kill = tk;
+      if (rank === 1) total_wins++;
+      if (rank <= 3 && rank > 0) total_top3++;
+      if (hd > td) hp_h++; else if (td > hd) hp_t++; else hp_eq++;
+      if (hk > tk) kl_h++; else if (tk > hk) kl_t++; else kl_eq++;
+
+      const ref = `Day ${gd.game_no}, Game ${g.game}`;
+      if (sc > best_score)      { best_score = sc;      best_ref = `${ref} (score: ${sc.toFixed(2)})`; }
+      if (hs > hori_best_score) { hori_best_score = hs; hori_best_ref = `${ref} (score: ${hs.toFixed(2)})`; }
+      if (ts > tami_best_score) { tami_best_score = ts; tami_best_ref = `${ref} (score: ${ts.toFixed(2)})`; }
+
+      day_hk += hk; day_tk += tk; day_hd += hd; day_td += td;
+      day_score += sc; day_rank += rank;
+    });
+
+    const n = games.length || 1;
+    const team_kills = day_hk + day_tk;
+    const team_avg_dmg = (day_hd + day_td) / 2 / n;
+    const team_avg_score = day_score / n;
+    const team_avg_rank = day_rank / n;
+
+    if (team_kills > team_kill_best)      { team_kill_best = team_kills;      team_kill_ref = gd.game_no; }
+    if (team_avg_dmg > team_dmg_best)     { team_dmg_best = team_avg_dmg;     team_dmg_ref = gd.game_no; }
+    if (team_avg_score > team_score_best) { team_score_best = team_avg_score; team_score_ref = gd.game_no; }
+    if (team_avg_rank < team_rank_best)   { team_rank_best = team_avg_rank;   team_rank_ref = gd.game_no; }
+  });
+
+  all_hori_dmg.sort((a, b) => a - b);
+  all_tami_dmg.sort((a, b) => a - b);
+  const hori_median = all_hori_dmg[Math.floor(all_hori_dmg.length / 2)] || 0;
+  const tami_median = all_tami_dmg[Math.floor(all_tami_dmg.length / 2)] || 0;
+  const hori_mean = total_games_played > 0 ? Math.round(hori_damage_sum / total_games_played) : 0;
+  const tami_mean = total_games_played > 0 ? Math.round(tami_damage_sum / total_games_played) : 0;
+  const hpt = hp_h + hp_t + hp_eq;
+  const klt = kl_h + kl_t + kl_eq;
+  const pct = (a, t) => t > 0 ? ((a / t) * 100).toFixed(1) : '0.0';
+
+  return {
+    hori_total_kills, tami_total_kills,
+    total_games_played, total_wins, total_top3,
+    win_rate:  `${pct(total_wins, total_games_played)}%`,
+    top3_rate: `${pct(total_top3, total_games_played)}%`,
+    hori_kill_avg: total_games_played > 0 ? (hori_total_kills / total_games_played).toFixed(2) : '0.00',
+    tami_kill_avg: total_games_played > 0 ? (tami_total_kills / total_games_played).toFixed(2) : '0.00',
+    hori_max_kill, tami_max_kill,
+    hori_damage_mean: hori_mean,
+    tami_damage_mean: tami_mean,
+    hori_damage_median: hori_median,
+    tami_damage_median: tami_median,
+    hori_damage_max: hori_max_dmg,
+    tami_damage_max: tami_max_dmg,
+    hp_h: pct(hp_h, hpt), hp_eq: pct(hp_eq, hpt), hp_t: pct(hp_t, hpt),
+    kl_h: pct(kl_h, klt), kl_eq: pct(kl_eq, klt), kl_t: pct(kl_t, klt),
+    team_total_kill_best:  `${team_kill_best} — Day ${team_kill_ref}`,
+    team_avg_damage_best:  `${Math.round(team_dmg_best)} — Day ${team_dmg_ref}`,
+    team_avg_score_best:   `${team_score_best.toFixed(2)} — Day ${team_score_ref}`,
+    team_avg_rank_best:    `${team_rank_best.toFixed(1)} — Day ${team_rank_ref}`,
+    hori_best_game: hori_best_ref,
+    tami_best_game: tami_best_ref,
+    best_game_ever: best_ref,
+    // raw numbers for charts
+    hori_kill_total: hori_total_kills,
+    tami_kill_total: tami_total_kills,
+  };
+}
