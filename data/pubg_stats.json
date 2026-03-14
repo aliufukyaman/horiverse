@@ -85,7 +85,17 @@
           "tami_damage": 200,
           "rank": 5
         }
-      ]
+      ],
+      "total": {
+        "hori_kill": 21,
+        "hori_damage": 329.8,
+        "tami_kill": 8,
+        "tami_damage": 163.7,
+        "rank": 13.6,
+        "hori_score": 0.39536,
+        "tami_score": 0.29714,
+        "score": 0.34625
+      }
     },
     {
       "game_no": 2,
@@ -9044,14 +9054,27 @@
           "hori_damage": 0,
           "tami_kill": 0,
           "tami_damage": 0,
-          "rank": 0
+          "rank": 0,
+          "hori_score": 0.306,
+          "tami_score": 0.306,
+          "score": 0.306
         }
-      ]
+      ],
+      "total": {
+        "hori_kill": 6,
+        "hori_damage": 222.125,
+        "tami_kill": 9,
+        "tami_damage": 139.75,
+        "rank": 21.75,
+        "hori_score": 0.2671,
+        "tami_score": 0.269,
+        "score": 0.2681
+      }
     },
     {
       "game_no": 105,
       "date": "14.03.2026",
-      "best_game": "Game on 1468. row",
+      "best_game": "Game 9",
       "games": [
         {
           "game": 1,
@@ -9135,5 +9158,28 @@
         }
       ]
     }
-  ]
+  ],
+  "overall": {
+    "hori_total_kills": 1327,
+    "tami_total_kills": 671,
+    "total_games_played": 1040,
+    "total_wins": 24,
+    "total_top3": 84,
+    "win_rate": "2.3%",
+    "top3_rate": "8.1%",
+    "hori_kill_avg": "1.276",
+    "tami_kill_avg": "0.645",
+    "hori_damage_mean_median": "226.4, 170",
+    "tami_damage_mean_median": "129.7, 100",
+    "hori_damage_max": 1195,
+    "tami_damage_max": 935,
+    "hp_comparison": "H: %66.5, Eq:%4.7, T: %28.7",
+    "kill_comparison": "H: %39.9, Eq:%44.6, T: %15.5",
+    "team_total_kill_best": "43, Game No:68",
+    "team_avg_damage_best": "328.6, Game No:60",
+    "team_avg_score_best": "0.412, Game No:68",
+    "hori_best_game": "Game No:2, Game 10",
+    "tami_best_game": "Game No:65, Game 2",
+    "best_game_ever": "Game No:60, Game 10"
+  }
 }
