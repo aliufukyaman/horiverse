@@ -49,6 +49,12 @@ export function recalcOverall(game_days) {
   let team_dmg_best = 0, team_dmg_ref = null;
   let team_score_best = -1, team_score_ref = null;
   let team_rank_best = 999, team_rank_ref = null;
+  // extra stats
+  let hori_score_sum = 0, tami_score_sum = 0, score_count = 0;
+  let day_scores = []; // {game_no, score} for best/worst days
+  let top3_streak = 0, cur_streak = 0;
+  let win_streak = 0, cur_win_streak = 0;
+  let no_kill_games = 0; // games where both players got 0 kills
 
   game_days.forEach(gd => {
     const enriched = calcGameDay(gd);
@@ -83,6 +89,8 @@ export function recalcOverall(game_days) {
       if (hs > hori_best_score) { hori_best_score = hs; hori_best_ref = `${ref} (score: ${hs.toFixed(2)})`; }
       if (ts > tami_best_score) { tami_best_score = ts; tami_best_ref = `${ref} (score: ${ts.toFixed(2)})`; }
 
+      hori_score_sum += hs; tami_score_sum += ts; score_count++;
+      if (hk === 0 && tk === 0) no_kill_games++;
       day_hk += hk; day_tk += tk; day_hd += hd; day_td += td;
       day_score += sc; day_rank += rank;
     });
@@ -97,6 +105,17 @@ export function recalcOverall(game_days) {
     if (team_avg_dmg > team_dmg_best)     { team_dmg_best = team_avg_dmg;     team_dmg_ref = gd.game_no; }
     if (team_avg_score > team_score_best) { team_score_best = team_avg_score; team_score_ref = gd.game_no; }
     if (team_avg_rank < team_rank_best)   { team_rank_best = team_avg_rank;   team_rank_ref = gd.game_no; }
+
+    day_scores.push({ game_no: gd.game_no, score: team_avg_score });
+
+    // top3 streak (per game)
+    games.forEach(g => {
+      const r = Number(g.rank) || 99;
+      if (r <= 3 && r > 0) { cur_streak++; if (cur_streak > top3_streak) top3_streak = cur_streak; }
+      else cur_streak = 0;
+      if (r === 1) { cur_win_streak++; if (cur_win_streak > win_streak) win_streak = cur_win_streak; }
+      else cur_win_streak = 0;
+    });
   });
 
   all_hori_dmg.sort((a, b) => a - b);
@@ -135,5 +154,26 @@ export function recalcOverall(game_days) {
     // raw numbers for charts
     hori_kill_total: hori_total_kills,
     tami_kill_total: tami_total_kills,
+    // extra stats for 4th panel
+    hori_score_avg: score_count > 0 ? (hori_score_sum / score_count).toFixed(3) : '0.000',
+    tami_score_avg: score_count > 0 ? (tami_score_sum / score_count).toFixed(3) : '0.000',
+    top3_streak,
+    win_streak,
+    no_kill_games,
+    no_kill_rate: `${pct(no_kill_games, total_games_played)}%`,
+    // best 10 / worst 10 game days by team score
+    best10_avg: (() => {
+      const sorted = [...day_scores].sort((a,b) => b.score - a.score);
+      const top = sorted.slice(0, 10);
+      return top.length ? (top.reduce((s,d)=>s+d.score,0)/top.length).toFixed(3) : '—';
+    })(),
+    worst10_avg: (() => {
+      const sorted = [...day_scores].sort((a,b) => a.score - b.score);
+      const bot = sorted.slice(0, 10);
+      return bot.length ? (bot.reduce((s,d)=>s+d.score,0)/bot.length).toFixed(3) : '—';
+    })(),
+    // raw eq counts for comparison
+    hp_eq_raw: pct(hp_eq, hpt),
+    kl_eq_raw: pct(kl_eq, klt),
   };
 }

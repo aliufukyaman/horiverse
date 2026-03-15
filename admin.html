@@ -45,7 +45,7 @@
     .section-title{font-size:1rem;font-weight:600;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
     /* SUMMARY PANELS */
-    .summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px;}
+    .summary-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:28px;}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
     .panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;}
 
@@ -75,6 +75,11 @@
     .cmp-table .tv{color:var(--tami);font-weight:600;}
     .cmp-bar-wrap{display:flex;gap:4px;align-items:center;padding:4px 0;}
     .cmp-bar{height:6px;border-radius:3px;flex-shrink:0;}
+    .cmp-eq-pct{font-size:.68rem;color:var(--text-dim);white-space:nowrap;}
+
+    /* 4TH PANEL */
+    .extra-panel .gen-stats td:first-child{width:55%;}
+    .stat-badge{display:inline-block;background:rgba(217,180,87,.12);color:var(--gold);border-radius:8px;padding:1px 8px;font-weight:700;font-size:.85rem;}
 
     /* CHART */
     .charts-row{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:28px;}
@@ -173,6 +178,9 @@
     .back-btn{display:none;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;align-items:center;gap:5px;}
     .back-btn:hover{border-color:var(--gold);color:var(--gold);}
 
+    @media(max-width:1400px){
+      .summary-row{grid-template-columns:1fr 1fr;}
+    }
     @media(max-width:1100px){
       .summary-row{grid-template-columns:1fr 1fr;}
       .charts-row{grid-template-columns:1fr;}
@@ -286,6 +294,20 @@
           <tbody id="cmp-tbody"></tbody>
         </table>
       </div>
+      <!-- 4th panel: Advanced Stats -->
+      <div class="panel extra-panel">
+        <div class="panel-title">Advanced Stats</div>
+        <table class="gen-stats">
+          <tr><td>horizon1710 Score Avg</td><td id="s-hori-savg">—</td></tr>
+          <tr><td>tami64 Score Avg</td><td id="s-tami-savg">—</td></tr>
+          <tr><td>Best 10 Days (avg score)</td><td id="s-best10">—</td></tr>
+          <tr><td>Worst 10 Days (avg score)</td><td id="s-worst10">—</td></tr>
+          <tr><td>Longest Top3 Streak</td><td id="s-top3-streak">—</td></tr>
+          <tr><td>Longest Win Streak</td><td id="s-win-streak">—</td></tr>
+          <tr><td>0-Kill Games (both)</td><td id="s-nokill">—</td></tr>
+          <tr><td>0-Kill Rate</td><td id="s-nokill-rate">—</td></tr>
+        </table>
+      </div>
     </div>
 
     <!-- CHARTS -->
@@ -304,7 +326,7 @@
         <div class="chart-wrap"><canvas id="chart-rank"></canvas></div>
       </div>
       <div class="chart-panel">
-        <div class="panel-title">Team Score per Game Day</div>
+        <div class="panel-title">Score per Game Day (Team · horizon1710 · tami64)</div>
         <div class="chart-wrap"><canvas id="chart-score"></canvas></div>
       </div>
     </div>
@@ -439,30 +461,54 @@ function renderOverall(o, game_days) {
     ['Damage Max', o.hori_damage_max, o.tami_damage_max],
     ['Damage Mean', o.hori_damage_mean, o.tami_damage_mean],
     ['Damage Median', o.hori_damage_median, o.tami_damage_median],
-    ['Damage Lead %', `${o.hp_h}%`, `${o.hp_t}%`, true, o.hp_h, o.hp_t],
-    ['Kill Lead %', `${o.kl_h}%`, `${o.kl_t}%`, true, o.kl_h, o.kl_t],
+    ['Damage Lead %', `${o.hp_h}%`, `${o.hp_t}%`, true, o.hp_h, o.hp_t, o.hp_eq_raw],
+    ['Kill Lead %', `${o.kl_h}%`, `${o.kl_t}%`, true, o.kl_h, o.kl_t, o.kl_eq_raw],
   ];
   document.getElementById('cmp-tbody').innerHTML = rows.map(r => {
     const hVal = r[1]; const tVal = r[2];
     const isBar = r[3];
+    const eqPct = r[6];
     return `<tr>
       <td class="lbl">${r[0]}</td>
       <td class="hv">${hVal}</td>
-      <td style="width:80px">${isBar ? bar(r[4], r[5]) : ''}</td>
+      <td style="width:100px">${isBar ? bar(r[4], r[5]) + `<div class="cmp-eq-pct">eq: ${eqPct}%</div>` : ''}</td>
       <td class="tv">${tVal}</td>
     </tr>`;
   }).join('');
+
+  // 4th panel
+  const sv = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  sv('s-hori-savg',    o.hori_score_avg || '—');
+  sv('s-tami-savg',    o.tami_score_avg || '—');
+  sv('s-best10',       o.best10_avg || '—');
+  sv('s-worst10',      o.worst10_avg || '—');
+  sv('s-top3-streak',  o.top3_streak != null ? `${o.top3_streak} games` : '—');
+  sv('s-win-streak',   o.win_streak != null ? `${o.win_streak} games` : '—');
+  sv('s-nokill',       o.no_kill_games != null ? o.no_kill_games : '—');
+  sv('s-nokill-rate',  o.no_kill_rate || '—');
 }
 
 // ── CHARTS ─────────────────────────────────────────────
+function movingAvg(data, w) {
+  return data.map((_, i) => {
+    if (i < w - 1) return null;
+    const slice = data.slice(i - w + 1, i + 1).filter(v => v != null);
+    return slice.length ? parseFloat((slice.reduce((s,v)=>s+v,0)/slice.length).toFixed(3)) : null;
+  });
+}
+
 function renderCharts(gds) {
-  const labels = gds.map(g => `D${g.game_no}`);
+  const gameNos = gds.map(g => g.game_no);
+  const labels  = gds.map(g => `D${g.game_no}`);
   const horiKills = gds.map(g => g.total.hori_kill);
   const tamiKills = gds.map(g => g.total.tami_kill);
   const horiDmg   = gds.map(g => g.total.hori_damage);
   const tamiDmg   = gds.map(g => g.total.tami_damage);
   const ranks     = gds.map(g => g.total.rank);
   const scores    = gds.map(g => g.total.score);
+  const horiScores = gds.map(g => g.total.hori_score);
+  const tamiScores = gds.map(g => g.total.tami_score);
+  const W = 10; // moving average window
 
   const defaults = {
     responsive: true, maintainAspectRatio: false,
@@ -471,30 +517,50 @@ function renderCharts(gds) {
       x: { ticks: { color: '#9090b0', font: { size: 9 }, maxTicksLimit: 20 }, grid: { color: 'rgba(255,255,255,0.04)' } },
       y: { ticks: { color: '#9090b0', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
     },
+    onClick(evt, elements) {
+      if (!elements.length) return;
+      const idx = elements[0].index;
+      openDayPopup(gameNos[idx]);
+    },
   };
 
   function mkChart(id, datasets, opts = {}) {
     if (charts[id]) charts[id].destroy();
-    charts[id] = new Chart(document.getElementById(id), {
+    const canvas = document.getElementById(id);
+    charts[id] = new Chart(canvas, {
       type: 'line',
       data: { labels, datasets },
-      options: { ...defaults, ...opts },
+      options: { ...defaults, ...opts, onClick: defaults.onClick },
     });
+    canvas.style.cursor = 'pointer';
+  }
+
+  function maDataset(data, color, label) {
+    return { label, data: movingAvg(data, W), borderColor: color, backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, tension: .3, spanGaps: false };
   }
 
   mkChart('chart-kills', [
     { label:'horizon1710', data: horiKills, borderColor:'#d9b457', backgroundColor:'rgba(217,180,87,.1)', tension:.3, pointRadius:2, borderWidth:2 },
-    { label:'tami64', data: tamiKills, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'tami64',      data: tamiKills, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    maDataset(horiKills, '#d9b457', `hori ${W}d MA`),
+    maDataset(tamiKills, '#3498db', `tami ${W}d MA`),
   ]);
   mkChart('chart-damage', [
     { label:'horizon1710 Avg Dmg', data: horiDmg, borderColor:'#d9b457', backgroundColor:'rgba(217,180,87,.1)', tension:.3, pointRadius:2, borderWidth:2 },
-    { label:'tami64 Avg Dmg', data: tamiDmg, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'tami64 Avg Dmg',      data: tamiDmg, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    maDataset(horiDmg, '#d9b457', `hori ${W}d MA`),
+    maDataset(tamiDmg, '#3498db', `tami ${W}d MA`),
   ]);
   mkChart('chart-rank', [
     { label:'Avg Rank', data: ranks, borderColor:'#2ecc71', backgroundColor:'rgba(46,204,113,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    maDataset(ranks, '#2ecc71', `${W}d MA`),
   ], { scales: { ...defaults.scales, y: { ...defaults.scales.y, reverse: true } } });
   mkChart('chart-score', [
-    { label:'Team Score', data: scores, borderColor:'#e5c982', backgroundColor:'rgba(229,201,130,.1)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'Team Score',      data: scores,     borderColor:'#e5c982', backgroundColor:'rgba(229,201,130,.08)', tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'horizon1710',     data: horiScores, borderColor:'#d9b457', backgroundColor:'transparent',           tension:.3, pointRadius:0, borderWidth:1.5, borderDash:[2,2] },
+    { label:'tami64',          data: tamiScores, borderColor:'#3498db', backgroundColor:'transparent',           tension:.3, pointRadius:0, borderWidth:1.5, borderDash:[2,2] },
+    maDataset(scores, '#e5c982', `team ${W}d MA`),
   ]);
 }
 
