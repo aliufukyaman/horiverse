@@ -462,20 +462,28 @@ function renderOverall(o, game_days) {
       <div class="cmp-bar" style="width:${tPct}%;background:var(--tami)"></div>
     </div>`;
   }
+  function dayLink(text) {
+    if (!text) return '—';
+    return text.replace(/Day (\d+)/g, (_, n) => `<span class="day-link" onclick="openDayPopup(${n})">Day ${n}</span>`);
+  }
   const rows = [
-    ['Total Kills', o.hori_total_kills, o.tami_total_kills],
-    ['Kill Avg/game', o.hori_kill_avg, o.tami_kill_avg],
-    ['Max Kill (game)', o.hori_max_kill, o.tami_max_kill],
-    ['Damage Max', o.hori_damage_max, o.tami_damage_max],
-    ['Damage Mean', o.hori_damage_mean, o.tami_damage_mean],
-    ['Damage Median', o.hori_damage_median, o.tami_damage_median],
-    ['Damage Lead %', `${o.hp_h}%`, `${o.hp_t}%`, true, o.hp_h, o.hp_t, o.hp_eq_raw],
-    ['Kill Lead %', `${o.kl_h}%`, `${o.kl_t}%`, true, o.kl_h, o.kl_t, o.kl_eq_raw],
+    ['Total Kills',      o.hori_total_kills,   o.tami_total_kills],
+    ['Kill Avg/game',    o.hori_kill_avg,       o.tami_kill_avg],
+    ['Max Kill (game)',  o.hori_max_kill,       o.tami_max_kill],
+    ['Max Kill (day)',   o.hori_max_kill_day,   o.tami_max_kill_day,   false, null, null, null, true],
+    ['Min Kill (day)',   o.hori_min_kill_day,   o.tami_min_kill_day,   false, null, null, null, true],
+    ['Damage Max',       o.hori_damage_max,     o.tami_damage_max],
+    ['Damage Mean',      o.hori_damage_mean,    o.tami_damage_mean],
+    ['Damage Median',    o.hori_damage_median,  o.tami_damage_median],
+    ['Damage Lead %',    `${o.hp_h}%`,          `${o.hp_t}%`,          true, o.hp_h, o.hp_t, o.hp_eq_raw],
+    ['Kill Lead %',      `${o.kl_h}%`,          `${o.kl_t}%`,          true, o.kl_h, o.kl_t, o.kl_eq_raw],
   ];
   document.getElementById('cmp-tbody').innerHTML = rows.map(r => {
-    const hVal = r[1]; const tVal = r[2];
-    const isBar = r[3];
-    const eqPct = r[6];
+    const isBar  = r[3];
+    const isLink = r[7];
+    const eqPct  = r[6];
+    const hVal = isLink ? dayLink(r[1]) : r[1];
+    const tVal = isLink ? dayLink(r[2]) : r[2];
     return `<tr>
       <td class="lbl">${r[0]}</td>
       <td class="hv">${hVal}</td>

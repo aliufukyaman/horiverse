@@ -54,6 +54,10 @@ export function recalcOverall(game_days) {
   let all_hori_dmg = [], all_tami_dmg = [];
   let hori_max_dmg = 0, tami_max_dmg = 0;
   let hori_max_kill = 0, tami_max_kill = 0;
+  let hori_max_kill_day = 0, hori_max_kill_day_ref = null;
+  let tami_max_kill_day = 0, tami_max_kill_day_ref = null;
+  let hori_min_kill_day = Infinity, hori_min_kill_day_ref = null;
+  let tami_min_kill_day = Infinity, tami_min_kill_day_ref = null;
   let hp_h = 0, hp_t = 0, hp_eq = 0;
   let kl_h = 0, kl_t = 0, kl_eq = 0;
   let best_score = -1, best_ref = null;
@@ -119,6 +123,10 @@ export function recalcOverall(game_days) {
     if (team_avg_dmg > team_dmg_best)     { team_dmg_best = team_avg_dmg;     team_dmg_ref = gd.game_no; }
     if (team_avg_score > team_score_best) { team_score_best = team_avg_score; team_score_ref = gd.game_no; }
     if (team_avg_rank < team_rank_best)   { team_rank_best = team_avg_rank;   team_rank_ref = gd.game_no; }
+    if (day_hk > hori_max_kill_day) { hori_max_kill_day = day_hk; hori_max_kill_day_ref = gd.game_no; }
+    if (day_tk > tami_max_kill_day) { tami_max_kill_day = day_tk; tami_max_kill_day_ref = gd.game_no; }
+    if (day_hk < hori_min_kill_day) { hori_min_kill_day = day_hk; hori_min_kill_day_ref = gd.game_no; }
+    if (day_tk < tami_min_kill_day) { tami_min_kill_day = day_tk; tami_min_kill_day_ref = gd.game_no; }
 
     day_scores.push({ game_no: gd.game_no, score: team_avg_score });
 
@@ -150,6 +158,10 @@ export function recalcOverall(game_days) {
     hori_kill_avg: total_games_played > 0 ? (hori_total_kills / total_games_played).toFixed(2) : '0.00',
     tami_kill_avg: total_games_played > 0 ? (tami_total_kills / total_games_played).toFixed(2) : '0.00',
     hori_max_kill, tami_max_kill,
+    hori_max_kill_day: `${hori_max_kill_day} — Day ${hori_max_kill_day_ref}`,
+    tami_max_kill_day: `${tami_max_kill_day} — Day ${tami_max_kill_day_ref}`,
+    hori_min_kill_day: `${hori_min_kill_day === Infinity ? 0 : hori_min_kill_day} — Day ${hori_min_kill_day_ref}`,
+    tami_min_kill_day: `${tami_min_kill_day === Infinity ? 0 : tami_min_kill_day} — Day ${tami_min_kill_day_ref}`,
     hori_damage_mean: hori_mean,
     tami_damage_mean: tami_mean,
     hori_damage_median: hori_median,
