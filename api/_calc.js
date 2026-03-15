@@ -1,11 +1,25 @@
 // Shared calculation logic — imported by stats.js and stats.local.js
 
-// Score formula: (kill*0.5 + damage/100*0.2 + (51-rank)/5*0.3) / 10
+// Score formula v2:
+//   kill_score  = min(kill, 10) / 10                          → 0..1  (weight 50%)
+//   dmg_score   = min(damage, 1000) / 1000                   → 0..1  (weight 20%)
+//   rank_score  = piecewise: rank1=1.0, rank2-3 linear→0.8,
+//                 rank4-10 linear→0.5, rank11-50 linear→0, 51+=0  (weight 30%)
+//   final = kill_score*0.50 + dmg_score*0.20 + rank_score*0.30
+function rankScore(r) {
+  if (r <= 0) return 0;
+  if (r === 1)        return 1.0;
+  if (r <= 3)         return 0.9 - (r - 2) * 0.1;           // rank2→0.9, rank3→0.8
+  if (r <= 10)        return 0.8 - (r - 3) / 7 * 0.3;       // rank4→~0.76 .. rank10→0.5
+  if (r <= 50)        return 0.5 - (r - 10) / 40 * 0.5;     // rank11→~0.49 .. rank50→0
+  return 0;
+}
+
 export function calcScore(kill, damage, rank) {
-  const k = Number(kill) || 0;
-  const d = Number(damage) || 0;
-  const r = Number(rank) || 0;
-  return parseFloat(((k * 0.5 + d / 100 * 0.2 + (51 - r) / 5 * 0.3) / 10).toFixed(4));
+  const k = Math.min(Number(kill) || 0, 10) / 10;
+  const d = Math.min(Number(damage) || 0, 1000) / 1000;
+  const rs = rankScore(Number(rank) || 0);
+  return parseFloat((k * 0.50 + d * 0.20 + rs * 0.30).toFixed(4));
 }
 
 export function calcGameDay(gd) {
@@ -161,16 +175,20 @@ export function recalcOverall(game_days) {
     win_streak,
     no_kill_games,
     no_kill_rate: `${pct(no_kill_games, total_games_played)}%`,
-    // best 10 / worst 10 game days by team score
-    best10_avg: (() => {
-      const sorted = [...day_scores].sort((a,b) => b.score - a.score);
-      const top = sorted.slice(0, 10);
-      return top.length ? (top.reduce((s,d)=>s+d.score,0)/top.length).toFixed(3) : '—';
+    // per-player kill streaks (consecutive games with ≥1 kill)
+    hori_kill_streak: (() => {
+      let best=0, cur=0;
+      game_days.forEach(gd => calcGameDay(gd).games.forEach(g => {
+        if ((Number(g.hori_kill)||0) >= 1) { cur++; if(cur>best) best=cur; } else cur=0;
+      }));
+      return best;
     })(),
-    worst10_avg: (() => {
-      const sorted = [...day_scores].sort((a,b) => a.score - b.score);
-      const bot = sorted.slice(0, 10);
-      return bot.length ? (bot.reduce((s,d)=>s+d.score,0)/bot.length).toFixed(3) : '—';
+    tami_kill_streak: (() => {
+      let best=0, cur=0;
+      game_days.forEach(gd => calcGameDay(gd).games.forEach(g => {
+        if ((Number(g.tami_kill)||0) >= 1) { cur++; if(cur>best) best=cur; } else cur=0;
+      }));
+      return best;
     })(),
     // raw eq counts for comparison
     hp_eq_raw: pct(hp_eq, hpt),

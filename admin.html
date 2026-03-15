@@ -300,10 +300,10 @@
         <table class="gen-stats">
           <tr><td>horizon1710 Score Avg</td><td id="s-hori-savg">—</td></tr>
           <tr><td>tami64 Score Avg</td><td id="s-tami-savg">—</td></tr>
-          <tr><td>Best 10 Days (avg score)</td><td id="s-best10">—</td></tr>
-          <tr><td>Worst 10 Days (avg score)</td><td id="s-worst10">—</td></tr>
           <tr><td>Longest Top3 Streak</td><td id="s-top3-streak">—</td></tr>
           <tr><td>Longest Win Streak</td><td id="s-win-streak">—</td></tr>
+          <tr><td>horizon1710 Kill Streak</td><td id="s-hori-kstreak">—</td></tr>
+          <tr><td>tami64 Kill Streak</td><td id="s-tami-kstreak">—</td></tr>
           <tr><td>0-Kill Games (both)</td><td id="s-nokill">—</td></tr>
           <tr><td>0-Kill Rate</td><td id="s-nokill-rate">—</td></tr>
         </table>
@@ -359,11 +359,19 @@ let isNew = false;
 let charts = {};
 
 // ── SCORE FORMULA ──────────────────────────────────────
+function rankScore(r) {
+  if (r <= 0) return 0;
+  if (r === 1)   return 1.0;
+  if (r <= 3)    return 0.9 - (r - 2) * 0.1;
+  if (r <= 10)   return 0.8 - (r - 3) / 7 * 0.3;
+  if (r <= 50)   return 0.5 - (r - 10) / 40 * 0.5;
+  return 0;
+}
 function calcScore(kill, dmg, rank) {
-  const k = Number(kill) || 0;
-  const d = Number(dmg) || 0;
-  const r = Number(rank) || 0;
-  return parseFloat(((k * 0.5 + d / 100 * 0.2 + (51 - r) / 5 * 0.3) / 10).toFixed(2));
+  const k = Math.min(Number(kill) || 0, 10) / 10;
+  const d = Math.min(Number(dmg) || 0, 1000) / 1000;
+  const rs = rankScore(Number(rank) || 0);
+  return parseFloat((k * 0.50 + d * 0.20 + rs * 0.30).toFixed(2));
 }
 
 // ── LOGIN ──────────────────────────────────────────────
@@ -478,14 +486,14 @@ function renderOverall(o, game_days) {
 
   // 4th panel
   const sv = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-  sv('s-hori-savg',    o.hori_score_avg || '—');
-  sv('s-tami-savg',    o.tami_score_avg || '—');
-  sv('s-best10',       o.best10_avg || '—');
-  sv('s-worst10',      o.worst10_avg || '—');
-  sv('s-top3-streak',  o.top3_streak != null ? `${o.top3_streak} games` : '—');
-  sv('s-win-streak',   o.win_streak != null ? `${o.win_streak} games` : '—');
-  sv('s-nokill',       o.no_kill_games != null ? o.no_kill_games : '—');
-  sv('s-nokill-rate',  o.no_kill_rate || '—');
+  sv('s-hori-savg',     o.hori_score_avg || '—');
+  sv('s-tami-savg',     o.tami_score_avg || '—');
+  sv('s-top3-streak',   o.top3_streak != null ? `${o.top3_streak} games` : '—');
+  sv('s-win-streak',    o.win_streak != null ? `${o.win_streak} games` : '—');
+  sv('s-hori-kstreak',  o.hori_kill_streak != null ? `${o.hori_kill_streak} games` : '—');
+  sv('s-tami-kstreak',  o.tami_kill_streak != null ? `${o.tami_kill_streak} games` : '—');
+  sv('s-nokill',        o.no_kill_games != null ? o.no_kill_games : '—');
+  sv('s-nokill-rate',   o.no_kill_rate || '—');
 }
 
 // ── CHARTS ─────────────────────────────────────────────
@@ -557,10 +565,12 @@ function renderCharts(gds) {
     maDataset(ranks, '#2ecc71', `${W}d MA`),
   ], { scales: { ...defaults.scales, y: { ...defaults.scales.y, reverse: true } } });
   mkChart('chart-score', [
-    { label:'Team Score',      data: scores,     borderColor:'#e5c982', backgroundColor:'rgba(229,201,130,.08)', tension:.3, pointRadius:2, borderWidth:2 },
-    { label:'horizon1710',     data: horiScores, borderColor:'#d9b457', backgroundColor:'transparent',           tension:.3, pointRadius:0, borderWidth:1.5, borderDash:[2,2] },
-    { label:'tami64',          data: tamiScores, borderColor:'#3498db', backgroundColor:'transparent',           tension:.3, pointRadius:0, borderWidth:1.5, borderDash:[2,2] },
-    maDataset(scores, '#e5c982', `team ${W}d MA`),
+    { label:'Team Score',  data: scores,     borderColor:'#2ecc71', backgroundColor:'rgba(46,204,113,.08)',  tension:.3, pointRadius:2, borderWidth:2 },
+    { label:'horizon1710', data: horiScores, borderColor:'#d9b457', backgroundColor:'transparent',          tension:.3, pointRadius:1, borderWidth:1.5 },
+    { label:'tami64',      data: tamiScores, borderColor:'#3498db', backgroundColor:'transparent',          tension:.3, pointRadius:1, borderWidth:1.5 },
+    maDataset(scores,     '#2ecc71', `team ${W}d MA`),
+    maDataset(horiScores, '#d9b457', `hori ${W}d MA`),
+    maDataset(tamiScores, '#3498db', `tami ${W}d MA`),
   ]);
 }
 
@@ -745,11 +755,11 @@ function onCellInput(inp) {
 }
 
 const RULES = {
-  hori_kill:   { min:0, max:30, int:true },
-  tami_kill:   { min:0, max:30, int:true },
+  hori_kill:   { min:0, max:30,   int:true },
+  tami_kill:   { min:0, max:30,   int:true },
   hori_damage: { min:0, max:3000, int:true },
   tami_damage: { min:0, max:3000, int:true },
-  rank:        { min:1, max:100, int:true },
+  rank:        { min:1, max:50,   int:true },
 };
 
 function validateInput(inp) {
@@ -927,9 +937,7 @@ function openDayPopup(gameNo) {
   const gd = statsData.game_days.find(g => g.game_no === Number(gameNo));
   if (!gd) return;
   const n = (gd.games || []).length || 1;
-  function cs(k,d,r) {
-    return parseFloat(((Number(k)*0.5 + Number(d)/100*0.2 + (51-Number(r))/5*0.3)/10).toFixed(2));
-  }
+  function cs(k,d,r) { return calcScore(k,d,r); }
   const rows = gd.games.map(g => {
     const hs = cs(g.hori_kill, g.hori_damage, g.rank);
     const ts = cs(g.tami_kill, g.tami_damage, g.rank);
