@@ -543,7 +543,7 @@ function newGameDay() {
     game_no: maxNo + 1,
     date: `${dd}.${mm}.${yyyy}`,
     best_game: '',
-    games: Array.from({length:10}, (_,i) => ({ game:i+1, hori_kill:0, hori_damage:0, tami_kill:0, tami_damage:0, rank:0 })),
+    games: Array.from({length:10}, (_,i) => ({ game:i+1, hori_kill:'', hori_damage:'', tami_kill:'', tami_damage:'', rank:'' })),
     total: {},
   };
   editMode = true; isNew = true;
@@ -561,23 +561,29 @@ function renderDetail() {
   const em = editMode;
   const t = gd.total || {};
 
+  // in edit mode always show 10 rows; pad missing ones with empty fields
+  const editGames = em ? Array.from({length:10}, (_, i) => {
+    const existing = (gd.games || []).find(g => g.game === i+1);
+    return existing || { game:i+1, hori_kill:'', hori_damage:'', tami_kill:'', tami_damage:'', rank:'' };
+  }) : (gd.games || []);
+
   function rankCls(r) { const n=Number(r); return n===1?'rank-1':n<=3?'rank-top3':''; }
 
   function viewCell(v, decimals=0) {
     const n = Number(v);
-    if (isNaN(n) || v === null || v === undefined) return '—';
+    if (isNaN(n) || v === null || v === undefined || v === '') return '—';
     return decimals ? n.toFixed(decimals) : n;
   }
 
-  const gameRows = gd.games.map((g, idx) => {
+  const gameRows = editGames.map((g, idx) => {
     if (em) {
       return `<tr data-idx="${idx}">
         <td class="gn">${g.game}</td>
-        <td><input class="edit-input" data-key="hori_kill" data-idx="${idx}" value="${g.hori_kill ?? 0}" oninput="onCellInput(this)"></td>
-        <td><input class="edit-input" data-key="hori_damage" data-idx="${idx}" value="${g.hori_damage ?? 0}" oninput="onCellInput(this)"></td>
-        <td><input class="edit-input" data-key="tami_kill" data-idx="${idx}" value="${g.tami_kill ?? 0}" oninput="onCellInput(this)"></td>
-        <td><input class="edit-input" data-key="tami_damage" data-idx="${idx}" value="${g.tami_damage ?? 0}" oninput="onCellInput(this)"></td>
-        <td><input class="edit-input" data-key="rank" data-idx="${idx}" value="${g.rank ?? 0}" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="hori_kill" data-idx="${idx}" value="${g.hori_kill ?? ''}" placeholder="0" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="hori_damage" data-idx="${idx}" value="${g.hori_damage ?? ''}" placeholder="0" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="tami_kill" data-idx="${idx}" value="${g.tami_kill ?? ''}" placeholder="0" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="tami_damage" data-idx="${idx}" value="${g.tami_damage ?? ''}" placeholder="0" oninput="onCellInput(this)"></td>
+        <td><input class="edit-input" data-key="rank" data-idx="${idx}" value="${g.rank ?? ''}" placeholder="—" oninput="onCellInput(this)"></td>
         <td><span class="total-computed" id="hs-${idx}"></span></td>
         <td><span class="total-computed" id="ts-${idx}"></span></td>
         <td><span class="total-computed" id="sc-${idx}"></span></td>
@@ -685,8 +691,10 @@ function validateInput(inp) {
   const rule = RULES[key];
   if (!rule) return true;
   const v = inp.value.trim();
+  // empty string = blank row, skip validation (will be excluded on save)
+  if (v === '') { inp.classList.remove('err'); return true; }
   const n = Number(v);
-  const bad = v === '' || isNaN(n) || (rule.int && !Number.isInteger(n)) || n < rule.min || n > rule.max;
+  const bad = isNaN(n) || (rule.int && !Number.isInteger(n)) || n < rule.min || n > rule.max;
   inp.classList.toggle('err', bad);
   return !bad;
 }
@@ -699,13 +707,20 @@ function recalcTotal() {
   rows.forEach(row => {
     const get = k => { const el = row.querySelector(`[data-key="${k}"]`); return el ? Number(el.value)||0 : 0; };
     const hk=get('hori_kill'), hd=get('hori_damage'), tk=get('tami_kill'), td=get('tami_damage'), rk=get('rank');
-    const hs = calcScore(hk, hd, rk);
-    const ts = calcScore(tk, td, rk);
-    const sc = (hs+ts)/2;
     const idx = row.dataset.idx;
     const hsel = document.getElementById(`hs-${idx}`);
     const tsel = document.getElementById(`ts-${idx}`);
     const scel = document.getElementById(`sc-${idx}`);
+    // skip entirely empty rows in score display and totals
+    if (isRowEmpty(row)) {
+      if (hsel) hsel.textContent = '';
+      if (tsel) tsel.textContent = '';
+      if (scel) scel.textContent = '';
+      return;
+    }
+    const hs = calcScore(hk, hd, rk);
+    const ts = calcScore(tk, td, rk);
+    const sc = (hs+ts)/2;
     if (hsel) hsel.textContent = hs.toFixed(2);
     if (tsel) tsel.textContent = ts.toFixed(2);
     if (scel) scel.textContent = sc.toFixed(2);

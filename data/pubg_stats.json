@@ -9166,10 +9166,18 @@
         {
           "game": 1,
           "hori_kill": 0,
+          "hori_damage": 488,
+          "tami_kill": 3,
+          "tami_damage": 224,
+          "rank": 21
+        },
+        {
+          "game": 2,
+          "hori_kill": 0,
           "hori_damage": 0,
           "tami_kill": 0,
           "tami_damage": 0,
-          "rank": 3
+          "rank": 15
         }
       ]
     }
