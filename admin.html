@@ -95,7 +95,7 @@
     .add-day-btn{background:var(--gold);color:#1a1a2e;border:none;border-radius:6px;padding:5px 11px;font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
     .add-day-btn:hover{background:var(--gold-light);}
     .game-day-list{overflow-y:auto;flex:1;}
-    .game-day-item{padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;}
+    .game-day-item{padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:block;transition:background .15s;}
     .game-day-item:hover{background:var(--card2);}
     .game-day-item.active{background:rgba(217,180,87,.1);border-left:3px solid var(--gold);}
     .game-day-item .gd-num{font-weight:600;font-size:.85rem;}
@@ -589,14 +589,24 @@ function renderGDList(gds) {
   // newest first
   const sorted = [...gds].reverse();
   el.innerHTML = sorted.map(gd => {
-    const score = gd.total ? gd.total.score : '—';
+    const t = gd.total || {};
+    const score = t.score != null ? t.score : '—';
+    const hk = t.hori_kill != null ? t.hori_kill : '—';
+    const tk = t.tami_kill != null ? t.tami_kill : '—';
+    const totalKill = (t.hori_kill != null && t.tami_kill != null) ? t.hori_kill + t.tami_kill : '—';
+    const gamesPlayed = gd.games ? gd.games.filter(g => g.rank > 0 || g.hori_kill > 0 || g.hori_damage > 0 || g.tami_kill > 0 || g.tami_damage > 0).length : 0;
     const active = selectedGD && selectedGD.game_no === gd.game_no ? 'active' : '';
     return `<div class="game-day-item ${active}" onclick="selectGD(${gd.game_no})">
-      <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div class="gd-num">Day ${gd.game_no}</div>
-        <div class="gd-date">${gd.date || '—'}</div>
+        <div class="gd-score">${score !== '—' ? score : '—'}</div>
       </div>
-      <div class="gd-score">${score !== '—' ? score : '—'}</div>
+      <div class="gd-date" style="margin-bottom:4px">${gd.date || '—'} &nbsp;·&nbsp; ${gamesPlayed} games</div>
+      <div style="display:flex;gap:10px;font-size:11px;color:var(--text-muted)">
+        <span>Total K: <strong style="color:var(--text)">${totalKill}</strong></span>
+        <span style="color:var(--hori)">H: ${hk}</span>
+        <span style="color:var(--tami)">T: ${tk}</span>
+      </div>
     </div>`;
   }).join('');
 }
