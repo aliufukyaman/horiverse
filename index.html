@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horiverse - Mobil Oyun Stüdyosu</title>
-  <meta name="description" content="Horiverse, yenilikçi ve eğlenceli mobil oyunlar geliştiren bir oyun stüdyosudur.">
-  
+  <title>Horiverse - Mobile Game Studio</title>
+  <meta name="description" content="Horiverse is an innovative mobile game studio creating fun and engaging games.">
+
   <!-- Favicon -->
   <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
-  
+
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -25,15 +25,15 @@
       <a href="#" class="logo">Hori<span>verse</span></a>
       <nav>
         <ul class="nav-menu">
-          <li><a href="#" class="scroll-link">Home</a></li>
-          <li><a href="#games" class="scroll-link">Games</a></li>
-          <li><a href="#about" class="scroll-link">About</a></li>
-          <li><a href="#contact" class="scroll-link">Contact</a></li>
+          <li><a href="#" class="scroll-link" data-i18n="nav_home">Home</a></li>
+          <li><a href="#games" class="scroll-link" data-i18n="nav_games">Games</a></li>
+          <li><a href="#about" class="scroll-link" data-i18n="nav_about">About</a></li>
+          <li><a href="#contact" class="scroll-link" data-i18n="nav_contact">Contact</a></li>
           <li class="language-selector">
             <a href="#" class="current-lang">EN</a>
             <ul class="language-dropdown">
-              <li><a href="#" class="lang-option">EN</a></li>
-              <li><a href="#" class="lang-option">TR</a></li>
+              <li><a href="#" class="lang-option" data-lang="en">EN</a></li>
+              <li><a href="#" class="lang-option" data-lang="tr">TR</a></li>
             </ul>
           </li>
         </ul>
@@ -41,57 +41,46 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Welcome to the Horiverse</h1>
-      <p>Creating innovative and engaging mobile games that bring joy to millions of players worldwide. Join our gaming universe today!</p>
-      <a href="#games" class="btn scroll-link">Discover Our Games</a>
-    </div>
-  </section>
-
   <!-- Games Section -->
   <section id="games" class="games">
     <div class="container">
-      <div class="section-title">
-        <h2>Our Games</h2>
-        <p>Discover our exciting mobile games and join our gaming community!</p>
+      <div class="section-title" style="margin-bottom:36px">
+        <h1 class="site-hero-title" data-i18n="hero_title">Welcome to the Horiverse</h1>
+        <p class="site-hero-sub" data-i18n="hero_sub">Creating innovative and engaging mobile games that bring joy to millions of players worldwide.</p>
+        <h2 style="margin-top:32px" data-i18n="games_title">Our Games</h2>
       </div>
-      <div class="games-grid" style="max-width: 900px; margin: 0 auto;">
+      <div class="games-showcase">
 
         <!-- Game 1 - Horiku (Live) -->
-        <div class="game-card live">
-          <div class="game-img">
-            <img src="assets/images/horiku_game.png" alt="Horiku Game Screenshot">
+        <div class="showcase-card">
+          <div class="showcase-img-wrap">
+            <img src="assets/images/horiku.png" alt="Horiku">
           </div>
-          <div class="game-info">
-            <div class="game-logo">
-              <img src="assets/images/horiku_logo.png" alt="Horiku Logo">
-            </div>
-            <p>A challenging number puzzle game that tests your logic and strategic thinking. Merge numbers, create combos, and reach the highest score!</p>
+          <div class="showcase-info">
+            <h3 class="showcase-title">Horiku</h3>
+            <p class="showcase-desc" data-i18n="horiku_desc">A challenging puzzle game that tests your logic and strategic thinking. Discover hidden paths, solve tricky levels, and master every challenge!</p>
             <div class="store-links">
-              <a href="#" class="store-link"><i class="fab fa-google-play"></i> Google Play</a>
-              <a href="#" class="store-link"><i class="fab fa-apple"></i> App Store</a>
+              <a href="https://play.google.com/store/apps/details?id=com.horizonstudio.horiku&pcampaignid=web_share" class="store-link" target="_blank" rel="noopener"><i class="fab fa-google-play"></i> Google Play</a>
+              <a href="https://apps.apple.com/tr/app/horiku-discover-hidden-paths/id6757343867?l=tr" class="store-link" target="_blank" rel="noopener"><i class="fab fa-apple"></i> App Store</a>
             </div>
           </div>
         </div>
 
-        <!-- Game 2 - Horiblock (Coming Soon) -->
-        <div class="game-card coming-soon">
-          <div class="game-img">
-            <img src="assets/images/horiblock_game.png" alt="Horiblock Game">
+        <!-- Game 2 - Horiball (Under Development) -->
+        <div class="showcase-card inactive">
+          <div class="showcase-img-wrap">
+            <img src="assets/images/horiball.png" alt="Horiball">
           </div>
-          <div class="game-info">
-            <h3>Horiblock</h3>
-            <p>Get ready for an explosive block-breaking adventure! Stack, match, and blast your way through endless levels. Coming soon to mobile devices!</p>
+          <div class="showcase-info">
+            <h3 class="showcase-title">Horiball <span class="dev-badge" data-i18n="under_dev">Under Development</span></h3>
+            <p class="showcase-desc" data-i18n="horiball_desc">An exciting new adventure is on the way. Stay tuned for updates!</p>
             <div class="store-links">
-              <a href="#" class="store-link disabled"><i class="fab fa-google-play"></i> Google Play</a>
-              <a href="#" class="store-link disabled"><i class="fab fa-apple"></i> App Store</a>
+              <span class="store-link disabled"><i class="fab fa-google-play"></i> Google Play</span>
+              <span class="store-link disabled"><i class="fab fa-apple"></i> App Store</span>
             </div>
           </div>
         </div>
 
-      </div>
       </div>
     </div>
   </section>
@@ -101,11 +90,11 @@
     <div class="container">
       <div class="about-content">
         <div class="about-text">
-          <h2>About Horiverse</h2>
-          <p>Horiverse is an innovative mobile game studio founded in 2025. Our mission is to create fun, engaging, and addictive gaming experiences for players around the world.</p>
-          <p>Our team consists of passionate and experienced game development professionals. We strive for the highest quality and user satisfaction in every project we undertake.</p>
-          <p>From puzzle games to action-packed adventures, we're dedicated to bringing fresh ideas and memorable experiences to the mobile gaming landscape.</p>
-          <a href="#contact" class="btn scroll-link">Get in Touch</a>
+          <h2 data-i18n="about_title">About Horiverse</h2>
+          <p data-i18n="about_p1">Horiverse is an innovative mobile game studio founded in 2025. Our mission is to create fun, engaging, and addictive gaming experiences for players around the world.</p>
+          <p data-i18n="about_p2">Our team consists of passionate and experienced game development professionals. We strive for the highest quality and user satisfaction in every project we undertake.</p>
+          <p data-i18n="about_p3">From puzzle games to action-packed adventures, we're dedicated to bringing fresh ideas and memorable experiences to the mobile gaming landscape.</p>
+          <a href="#contact" class="btn scroll-link" data-i18n="get_in_touch">Get in Touch</a>
         </div>
         <div class="about-img">
           <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop" alt="Horiverse Team">
@@ -118,13 +107,13 @@
   <section id="contact" class="contact">
     <div class="container">
       <div class="section-title">
-        <h2>Contact Us</h2>
-        <p>Have questions? We'd love to hear from you!</p>
+        <h2 data-i18n="contact_title">Contact Us</h2>
+        <p data-i18n="contact_sub">Have questions? We'd love to hear from you!</p>
       </div>
       <div class="contact-content">
         <div class="contact-info">
-          <h3>Get In Touch</h3>
-          <p>Send us an email or follow us on social media to stay updated with our latest games and news.</p>
+          <h3 data-i18n="get_in_touch">Get In Touch</h3>
+          <p data-i18n="contact_p1">Send us an email or follow us on social media to stay updated with our latest games and news.</p>
           <p><i class="fas fa-envelope"></i> <a href="mailto:auyaman@gmail.com">auyaman@gmail.com</a></p>
           <p><i class="fas fa-map-marker-alt"></i> Istanbul, Turkey</p>
           <div class="social-links">
@@ -164,14 +153,14 @@
       <div class="footer-content">
         <div class="footer-logo">Hori<span>verse</span></div>
         <ul class="footer-links">
-          <li><a href="#" class="scroll-link">Home</a></li>
-          <li><a href="#games" class="scroll-link">Games</a></li>
-          <li><a href="#about" class="scroll-link">About</a></li>
-          <li><a href="#contact" class="scroll-link">Contact</a></li>
+          <li><a href="#" class="scroll-link" data-i18n="nav_home">Home</a></li>
+          <li><a href="#games" class="scroll-link" data-i18n="nav_games">Games</a></li>
+          <li><a href="#about" class="scroll-link" data-i18n="nav_about">About</a></li>
+          <li><a href="#contact" class="scroll-link" data-i18n="nav_contact">Contact</a></li>
           <li><a href="privacy_policy.html">Privacy Policy</a></li>
-          <li><a href="terms_conditions.html">Terms & Conditions</a></li>
+          <li><a href="terms_conditions.html">Terms &amp; Conditions</a></li>
         </ul>
-        <p class="copyright"><a href="#" id="copyright-link" onclick="openLoginModal(event)">&copy; 2026 Horiverse. All rights reserved.</a></p>
+        <p class="copyright"><a href="#" id="copyright-link" onclick="openLoginModal(event)" data-i18n="footer_copy">&copy; 2026 Horiverse. All rights reserved.</a></p>
       </div>
     </div>
   </footer>

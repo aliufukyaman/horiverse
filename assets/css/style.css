@@ -145,43 +145,17 @@ img {
   background: #f5f5f5;
 }
 
-/* Hero Section */
-.hero {
-  background: url('../images/hero-bg.jpg') no-repeat center center/cover;
-  height: 100vh;
-  position: relative;
-  color: white;
-  display: flex;
-  align-items: center;
-  text-align: center;
+.site-hero-title {
+  font-size: 2.8rem;
+  color: var(--primary-color);
+  margin-bottom: 12px;
 }
 
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 10;
-  max-width: 800px;
+.site-hero-sub {
+  font-size: 1.1rem;
+  color: #777;
+  max-width: 560px;
   margin: 0 auto;
-  padding: 0 20px;
-}
-
-.hero h1 {
-  font-size: 3.5rem;
-  margin-bottom: 20px;
-}
-
-.hero p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
 }
 
 .btn {
@@ -204,7 +178,8 @@ img {
 
 /* Games Section */
 .games {
-  padding: 100px 0;
+  padding: 80px 0 100px;
+  padding-top: calc(80px + 70px); /* 70px = header height */
 }
 
 .section-title {
@@ -364,6 +339,100 @@ img {
   opacity: 0.7;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Games Showcase */
+.games-showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.showcase-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.showcase-card:not(.inactive):hover {
+  transform: translateY(-8px);
+  border-color: var(--primary-color);
+  box-shadow: 0 16px 40px rgba(217,180,87,0.25);
+}
+
+.showcase-card.inactive {
+  opacity: 0.65;
+  filter: grayscale(30%);
+}
+
+.showcase-img-wrap {
+  width: 100%;
+  aspect-ratio: 9/16;
+  overflow: hidden;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.showcase-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 0.5s ease;
+}
+
+.showcase-card:not(.inactive):hover .showcase-img-wrap img {
+  transform: scale(1.04);
+}
+
+.showcase-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.showcase-title {
+  font-size: 1.4rem;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dev-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #888;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.showcase-desc {
+  color: #777;
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .games-showcase {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+  }
 }
 
 /* About Section */
