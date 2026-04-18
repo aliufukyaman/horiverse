@@ -9624,11 +9624,11 @@
         },
         {
           "game": 7,
-          "hori_kill": 0,
+          "hori_kill": 1,
           "hori_damage": 100,
-          "tami_kill": 1,
-          "tami_damage": 125,
-          "rank": 8
+          "tami_kill": 3,
+          "tami_damage": 300,
+          "rank": 14
         }
       ]
     }
