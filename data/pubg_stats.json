@@ -9666,6 +9666,21 @@
           "rank": 29
         }
       ]
+    },
+    {
+      "game_no": 112,
+      "date": "18.04.2026",
+      "best_game": "",
+      "games": [
+        {
+          "game": 1,
+          "hori_kill": 1,
+          "hori_damage": 124,
+          "tami_kill": 0,
+          "tami_damage": 22,
+          "rank": 8
+        }
+      ]
     }
   ],
   "overall": {
