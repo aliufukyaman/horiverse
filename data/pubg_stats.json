@@ -9046,30 +9046,9 @@
           "hori_damage": 0,
           "tami_kill": 0,
           "tami_damage": 0,
-          "rank": 0
-        },
-        {
-          "game": 10,
-          "hori_kill": 0,
-          "hori_damage": 0,
-          "tami_kill": 0,
-          "tami_damage": 0,
-          "rank": 0,
-          "hori_score": 0.306,
-          "tami_score": 0.306,
-          "score": 0.306
+          "rank": 30
         }
-      ],
-      "total": {
-        "hori_kill": 6,
-        "hori_damage": 222.125,
-        "tami_kill": 9,
-        "tami_damage": 139.75,
-        "rank": 21.75,
-        "hori_score": 0.2671,
-        "tami_score": 0.269,
-        "score": 0.2681
-      }
+      ]
     },
     {
       "game_no": 105,
