@@ -9752,12 +9752,36 @@
           "rank": 48
         },
         {
-          "game": 9,
+          "game": 4,
+          "hori_kill": 4,
+          "hori_damage": 632,
+          "tami_kill": 1,
+          "tami_damage": 175,
+          "rank": 3
+        },
+        {
+          "game": 5,
+          "hori_kill": 1,
+          "hori_damage": 359,
+          "tami_kill": 0,
+          "tami_damage": 126,
+          "rank": 11
+        },
+        {
+          "game": 6,
           "hori_kill": 2,
           "hori_damage": 181,
           "tami_kill": 1,
           "tami_damage": 234,
           "rank": 22
+        },
+        {
+          "game": 7,
+          "hori_kill": 0,
+          "hori_damage": 0,
+          "tami_kill": 0,
+          "tami_damage": 0,
+          "rank": 23
         }
       ]
     }
