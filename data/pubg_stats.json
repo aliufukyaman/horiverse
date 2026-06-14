@@ -11019,11 +11019,19 @@
         },
         {
           "game": 6,
-          "hori_kill": 9,
-          "hori_damage": 9,
-          "tami_kill": 9,
-          "tami_damage": 9,
-          "rank": 9
+          "hori_kill": 1,
+          "hori_damage": 406,
+          "tami_kill": 1,
+          "tami_damage": 313,
+          "rank": 2
+        },
+        {
+          "game": 7,
+          "hori_kill": 0,
+          "hori_damage": 0,
+          "tami_kill": 0,
+          "tami_damage": 29,
+          "rank": 37
         }
       ]
     },
