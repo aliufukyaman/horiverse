@@ -11348,6 +11348,14 @@
           "tami_kill": 0,
           "tami_damage": 0,
           "rank": 49
+        },
+        {
+          "game": 8,
+          "hori_kill": 2,
+          "hori_damage": 553,
+          "tami_kill": 0,
+          "tami_damage": 39,
+          "rank": 9
         }
       ]
     }
