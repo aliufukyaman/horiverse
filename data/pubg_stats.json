@@ -11485,11 +11485,11 @@
         },
         {
           "game": 5,
-          "hori_kill": 1,
-          "hori_damage": 261,
-          "tami_kill": 1,
-          "tami_damage": 165,
-          "rank": 20
+          "hori_kill": 2,
+          "hori_damage": 256,
+          "tami_kill": 0,
+          "tami_damage": 31,
+          "rank": 14
         }
       ]
     }
