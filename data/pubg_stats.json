@@ -12020,6 +12020,14 @@
           "tami_kill": 0,
           "tami_damage": 84,
           "rank": 34
+        },
+        {
+          "game": 9,
+          "hori_kill": 3,
+          "hori_damage": 420,
+          "tami_kill": 0,
+          "tami_damage": 43,
+          "rank": 10
         }
       ]
     }
