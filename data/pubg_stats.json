@@ -12038,6 +12038,21 @@
           "rank": 3
         }
       ]
+    },
+    {
+      "game_no": 140,
+      "date": "05.07.2026",
+      "best_game": "",
+      "games": [
+        {
+          "game": 1,
+          "hori_kill": 1,
+          "hori_damage": 158,
+          "tami_kill": 0,
+          "tami_damage": 101,
+          "rank": 18
+        }
+      ]
     }
   ],
   "overall": {
