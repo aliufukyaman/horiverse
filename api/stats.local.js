@@ -1,10 +1,10 @@
 import { jwtVerify } from 'jose';
-import { readFileSync, writeFileSync, readdirSync, unlinkSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { calcGameDay, recalcOverall } from './_calc.js';
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'horiverse-fallback-secret-32chars!!');
-const DAYS_DIR = join(process.cwd(), 'data', 'days');
+const DATA_PATH = join(process.cwd(), 'data', 'index.json');
 
 async function verifyAuth(req) {
   const cookie = req.headers.cookie || '';
@@ -14,42 +14,11 @@ async function verifyAuth(req) {
   catch { return false; }
 }
 
-function dateToISO(dateStr) {
-  if (!dateStr) return '00000000';
-  const parts = dateStr.split('.');
-  if (parts.length !== 3) return '00000000';
-  const [dd, mm, yyyy] = parts;
-  return yyyy + mm.padStart(2, '0') + dd.padStart(2, '0');
-}
+function load() { return JSON.parse(readFileSync(DATA_PATH, 'utf-8')); }
+function save(data) { writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8'); }
 
-function dayFilename(gd) {
-  const iso = dateToISO(gd.date);
-  const num = String(gd.game_no).padStart(3, '0');
-  return `day_${iso}_${num}.json`;
-}
-
-function loadAll() {
-  if (!existsSync(DAYS_DIR)) mkdirSync(DAYS_DIR, { recursive: true });
-  const files = readdirSync(DAYS_DIR).filter(f => f.endsWith('.json')).sort();
-  return files.map(f => JSON.parse(readFileSync(join(DAYS_DIR, f), 'utf-8')));
-}
-
-function saveDay(gd) {
-  if (!existsSync(DAYS_DIR)) mkdirSync(DAYS_DIR, { recursive: true });
-  writeFileSync(join(DAYS_DIR, dayFilename(gd)), JSON.stringify(gd, null, 2), 'utf-8');
-}
-
-function deleteDay(game_no) {
-  if (!existsSync(DAYS_DIR)) return;
-  const files = readdirSync(DAYS_DIR).filter(f => f.endsWith('.json'));
-  for (const f of files) {
-    const gd = JSON.parse(readFileSync(join(DAYS_DIR, f), 'utf-8'));
-    if (gd.game_no === game_no) { unlinkSync(join(DAYS_DIR, f)); return; }
-  }
-}
-
-function enrichData(game_days) {
-  return { game_days: game_days.map(calcGameDay), overall: recalcOverall(game_days) };
+function enrichData(raw) {
+  return { game_days: raw.game_days.map(calcGameDay), overall: recalcOverall(raw.game_days) };
 }
 
 function cleanGameDay(game_day) {
@@ -73,25 +42,25 @@ export default async function handler(req, res) {
   if (!authed) return res.status(401).json({ error: 'Unauthorized' });
 
   if (req.method === 'GET') {
-    const game_days = loadAll();
-    return res.status(200).json(enrichData(game_days));
+    return res.status(200).json(enrichData(load()));
   }
 
   if (req.method === 'POST') {
     const { action, game_day } = req.body || {};
+    const data = load();
 
     if (action === 'save_game_day') {
       const clean = cleanGameDay(game_day);
-      // remove old file if game_no exists (date might have changed → filename changes)
-      deleteDay(clean.game_no);
-      saveDay(clean);
-      const all = loadAll();
-      return res.status(200).json({ ok: true, overall: recalcOverall(all) });
+      const idx = data.game_days.findIndex(g => g.game_no === clean.game_no);
+      if (idx >= 0) data.game_days[idx] = clean;
+      else { data.game_days.push(clean); data.game_days.sort((a, b) => a.game_no - b.game_no); }
+      save(data);
+      return res.status(200).json({ ok: true, overall: recalcOverall(data.game_days) });
     }
 
     if (action === 'delete_game_day') {
-      deleteDay(game_day.game_no);
-      const all = loadAll();
+      data.game_days = data.game_days.filter(g => g.game_no !== game_day.game_no);
+      save(data);
       return res.status(200).json({ ok: true });
     }
 
