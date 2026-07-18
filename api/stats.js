@@ -6,7 +6,7 @@ const GH_TOKEN = process.env.GITHUB_TOKEN;
 const GH_OWNER = process.env.GITHUB_OWNER;
 const GH_REPO  = process.env.GITHUB_REPO;
 const GH_DAYS_DIR = 'data/days';
-const GH_BASE  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents`;
+const GH_BASE  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
 
 const GH_HEADERS = {
   Authorization: `Bearer ${GH_TOKEN}`,
@@ -36,21 +36,49 @@ function dayFilename(gd) {
   return `day_${iso}_${num}.json`;
 }
 
-// List all files in data/days/ and return [{name, path, sha}]
-async function ghListDays() {
-  const r = await fetch(`${GH_BASE}/${GH_DAYS_DIR}`, { headers: GH_HEADERS });
-  if (!r.ok) throw new Error(`GitHub list failed: ${r.status} — ${await r.text()}`);
-  const items = await r.json();
-  return items.filter(i => i.type === 'file' && i.name.endsWith('.json')).sort((a, b) => a.name.localeCompare(b.name));
+// Get default branch HEAD SHA
+async function getHeadSha() {
+  const r = await fetch(`${GH_BASE}/git/ref/heads/master`, { headers: GH_HEADERS });
+  if (!r.ok) throw new Error(`GitHub ref failed: ${r.status}`);
+  const j = await r.json();
+  return j.object.sha;
 }
 
-// Get a single file content + sha
+// Get tree SHA for data/days/ directory using Git Trees API — 1 API call for all files
+async function loadAllDays() {
+  const headSha = await getHeadSha();
+  // recursive tree from HEAD — returns all blobs with their SHA and path
+  const r = await fetch(`${GH_BASE}/git/trees/${headSha}?recursive=1`, { headers: GH_HEADERS });
+  if (!r.ok) throw new Error(`GitHub tree failed: ${r.status} — ${await r.text()}`);
+  const tree = await r.json();
+
+  // filter to data/days/*.json, sort by filename
+  const dayBlobs = tree.tree
+    .filter(item => item.type === 'blob' && item.path.startsWith(`${GH_DAYS_DIR}/`) && item.path.endsWith('.json'))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
+  // fetch each blob by SHA — blobs API returns base64 content, no rate-limit overhead vs contents API
+  const results = await Promise.all(dayBlobs.map(async blob => {
+    const r = await fetch(`${GH_BASE}/git/blobs/${blob.sha}`, { headers: GH_HEADERS });
+    if (!r.ok) throw new Error(`GitHub blob failed: ${r.status}`);
+    const j = await r.json();
+    const content = Buffer.from(j.content, 'base64').toString('utf-8');
+    return { data: JSON.parse(content), path: blob.path, blobSha: blob.sha };
+  }));
+
+  return results;
+}
+
+// Get a single file via contents API (needed to get file SHA for PUT)
 async function ghGetFile(path) {
-  const r = await fetch(`${GH_BASE}/${path}`, { headers: GH_HEADERS });
-  if (!r.ok) throw new Error(`GitHub GET failed: ${r.status}`);
+  const r = await fetch(`${GH_BASE}/contents/${path}`, { headers: GH_HEADERS });
+  if (!r.ok) {
+    if (r.status === 404) return null;
+    throw new Error(`GitHub GET failed: ${r.status}`);
+  }
   const meta = await r.json();
   const content = Buffer.from(meta.content, 'base64').toString('utf-8');
-  return { data: JSON.parse(content), sha: meta.sha };
+  return { data: JSON.parse(content), sha: meta.sha, path: meta.path };
 }
 
 // Write (create or update) a file
@@ -58,31 +86,22 @@ async function ghPutFile(path, data, sha, message) {
   const content = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
   const body = { message, content };
   if (sha) body.sha = sha;
-  const r = await fetch(`${GH_BASE}/${path}`, {
+  const r = await fetch(`${GH_BASE}/contents/${path}`, {
     method: 'PUT',
     headers: GH_HEADERS,
     body: JSON.stringify(body),
   });
   if (!r.ok) throw new Error(`GitHub PUT failed: ${r.status} — ${await r.text()}`);
-  const resp = await r.json();
-  return resp.content.sha;
 }
 
 // Delete a file
 async function ghDeleteFile(path, sha, message) {
-  const r = await fetch(`${GH_BASE}/${path}`, {
+  const r = await fetch(`${GH_BASE}/contents/${path}`, {
     method: 'DELETE',
     headers: GH_HEADERS,
     body: JSON.stringify({ message, sha }),
   });
   if (!r.ok) throw new Error(`GitHub DELETE failed: ${r.status} — ${await r.text()}`);
-}
-
-// Load all game days from GitHub (parallel)
-async function loadAllDays() {
-  const items = await ghListDays();
-  const results = await Promise.all(items.map(item => ghGetFile(item.path)));
-  return results.map(r => r.data);
 }
 
 function enrichData(game_days) {
@@ -111,7 +130,8 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const game_days = await loadAllDays();
+      const days = await loadAllDays();
+      const game_days = days.map(d => d.data);
       return res.status(200).json(enrichData(game_days));
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -120,48 +140,40 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const { action, game_day } = req.body || {};
+    const ts = new Date().toISOString();
     try {
-      const ts = new Date().toISOString();
-
       if (action === 'save_game_day') {
         const clean = cleanGameDay(game_day);
         const filename = dayFilename(clean);
         const filePath = `${GH_DAYS_DIR}/${filename}`;
 
-        // check if file exists (to get sha for update)
+        // check if target file exists
         let existingSha = null;
-        try {
-          const existing = await ghGetFile(filePath);
-          existingSha = existing.sha;
-        } catch { /* new file */ }
+        const existing = await ghGetFile(filePath);
+        if (existing) existingSha = existing.sha;
 
-        // if date changed, the filename changes — find and delete old file by game_no
+        // if not found by name, check if game_no exists under a different filename (date changed)
         if (!existingSha) {
-          const items = await ghListDays();
-          for (const item of items) {
-            const { data, sha } = await ghGetFile(item.path);
-            if (data.game_no === clean.game_no && item.path !== filePath) {
-              await ghDeleteFile(item.path, sha, `stats: remove old day ${clean.game_no} file [${ts}]`);
-              break;
-            }
+          const allDays = await loadAllDays();
+          const old = allDays.find(d => d.data.game_no === clean.game_no && d.path !== filePath);
+          if (old) {
+            const oldFile = await ghGetFile(old.path);
+            if (oldFile) await ghDeleteFile(old.path, oldFile.sha, `stats: remove old day ${clean.game_no} file [${ts}]`);
           }
         }
 
         await ghPutFile(filePath, clean, existingSha, `stats: update day ${clean.game_no} [${ts}]`);
 
-        // recalc overall from all days
-        const all = await loadAllDays();
-        return res.status(200).json({ ok: true, overall: recalcOverall(all) });
+        const allDays = await loadAllDays();
+        return res.status(200).json({ ok: true, overall: recalcOverall(allDays.map(d => d.data)) });
       }
 
       if (action === 'delete_game_day') {
-        const items = await ghListDays();
-        for (const item of items) {
-          const { data, sha } = await ghGetFile(item.path);
-          if (data.game_no === game_day.game_no) {
-            await ghDeleteFile(item.path, sha, `stats: delete day ${game_day.game_no} [${ts}]`);
-            break;
-          }
+        const allDays = await loadAllDays();
+        const target = allDays.find(d => d.data.game_no === game_day.game_no);
+        if (target) {
+          const f = await ghGetFile(target.path);
+          if (f) await ghDeleteFile(target.path, f.sha, `stats: delete day ${game_day.game_no} [${ts}]`);
         }
         return res.status(200).json({ ok: true });
       }
