@@ -1,0 +1,31 @@
+{
+  "game_no": 144,
+  "date": "18.07.2026",
+  "best_game": "",
+  "games": [
+    {
+      "game": 1,
+      "hori_kill": 1,
+      "hori_damage": 124,
+      "tami_kill": 0,
+      "tami_damage": 0,
+      "rank": 37
+    },
+    {
+      "game": 2,
+      "hori_kill": 0,
+      "hori_damage": 24,
+      "tami_kill": 0,
+      "tami_damage": 0,
+      "rank": 24
+    },
+    {
+      "game": 3,
+      "hori_kill": 1,
+      "hori_damage": 337,
+      "tami_kill": 0,
+      "tami_damage": 57,
+      "rank": 17
+    }
+  ]
+}

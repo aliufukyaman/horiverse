@@ -1,0 +1,87 @@
+{
+  "game_no": 49,
+  "date": "06.06.2025",
+  "best_game": "Game 4",
+  "games": [
+    {
+      "game": 1,
+      "hori_kill": 1,
+      "hori_damage": 168,
+      "tami_kill": 1,
+      "tami_damage": 155,
+      "rank": 2
+    },
+    {
+      "game": 2,
+      "hori_kill": 0,
+      "hori_damage": 105,
+      "tami_kill": 1,
+      "tami_damage": 200,
+      "rank": 13
+    },
+    {
+      "game": 3,
+      "hori_kill": 0,
+      "hori_damage": 128,
+      "tami_kill": 0,
+      "tami_damage": 0,
+      "rank": 14
+    },
+    {
+      "game": 4,
+      "hori_kill": 3,
+      "hori_damage": 469,
+      "tami_kill": 1,
+      "tami_damage": 277,
+      "rank": 9
+    },
+    {
+      "game": 5,
+      "hori_kill": 0,
+      "hori_damage": 62,
+      "tami_kill": 0,
+      "tami_damage": 54,
+      "rank": 10
+    },
+    {
+      "game": 6,
+      "hori_kill": 0,
+      "hori_damage": 55,
+      "tami_kill": 0,
+      "tami_damage": 133,
+      "rank": 30
+    },
+    {
+      "game": 7,
+      "hori_kill": 2,
+      "hori_damage": 193,
+      "tami_kill": 0,
+      "tami_damage": 68,
+      "rank": 5
+    },
+    {
+      "game": 8,
+      "hori_kill": 3,
+      "hori_damage": 371,
+      "tami_kill": 0,
+      "tami_damage": 186,
+      "rank": 2
+    },
+    {
+      "game": 9,
+      "hori_kill": 0,
+      "hori_damage": 133,
+      "tami_kill": 0,
+      "tami_damage": 0,
+      "rank": 15
+    },
+    {
+      "game": 10,
+      "hori_kill": 0,
+      "hori_damage": 0,
+      "tami_kill": 1,
+      "tami_damage": 166,
+      "rank": 19
+    }
+  ]
+}

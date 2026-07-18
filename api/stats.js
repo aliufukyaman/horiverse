@@ -5,8 +5,14 @@ const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'horiverse-fal
 const GH_TOKEN = process.env.GITHUB_TOKEN;
 const GH_OWNER = process.env.GITHUB_OWNER;
 const GH_REPO  = process.env.GITHUB_REPO;
-const GH_PATH  = 'data/pubg_stats.json';
-const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+const GH_DAYS_DIR = 'data/days';
+const GH_BASE  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents`;
+
+const GH_HEADERS = {
+  Authorization: `Bearer ${GH_TOKEN}`,
+  Accept: 'application/vnd.github+json',
+  'Content-Type': 'application/json',
+};
 
 async function verifyAuth(req) {
   const cookie = req.headers.cookie || '';
@@ -16,38 +22,87 @@ async function verifyAuth(req) {
   catch { return false; }
 }
 
-async function ghGet() {
-  const r = await fetch(GH_API, {
-    headers: { Authorization: `Bearer ${GH_TOKEN}`, Accept: 'application/vnd.github+json' },
-  });
+function dateToISO(dateStr) {
+  if (!dateStr) return '00000000';
+  const parts = dateStr.split('.');
+  if (parts.length !== 3) return '00000000';
+  const [dd, mm, yyyy] = parts;
+  return yyyy + mm.padStart(2, '0') + dd.padStart(2, '0');
+}
+
+function dayFilename(gd) {
+  const iso = dateToISO(gd.date);
+  const num = String(gd.game_no).padStart(3, '0');
+  return `day_${iso}_${num}.json`;
+}
+
+// List all files in data/days/ and return [{name, path, sha}]
+async function ghListDays() {
+  const r = await fetch(`${GH_BASE}/${GH_DAYS_DIR}`, { headers: GH_HEADERS });
+  if (!r.ok) throw new Error(`GitHub list failed: ${r.status} — ${await r.text()}`);
+  const items = await r.json();
+  return items.filter(i => i.type === 'file' && i.name.endsWith('.json')).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Get a single file content + sha
+async function ghGetFile(path) {
+  const r = await fetch(`${GH_BASE}/${path}`, { headers: GH_HEADERS });
   if (!r.ok) throw new Error(`GitHub GET failed: ${r.status}`);
   const meta = await r.json();
   const content = Buffer.from(meta.content, 'base64').toString('utf-8');
   return { data: JSON.parse(content), sha: meta.sha };
 }
 
-async function ghPut(data, sha) {
+// Write (create or update) a file
+async function ghPutFile(path, data, sha, message) {
   const content = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
-  const r = await fetch(GH_API, {
+  const body = { message, content };
+  if (sha) body.sha = sha;
+  const r = await fetch(`${GH_BASE}/${path}`, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${GH_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: `stats: update [${new Date().toISOString()}]`,
-      content,
-      sha,
-    }),
+    headers: GH_HEADERS,
+    body: JSON.stringify(body),
   });
   if (!r.ok) throw new Error(`GitHub PUT failed: ${r.status} — ${await r.text()}`);
+  const resp = await r.json();
+  return resp.content.sha;
 }
 
-function enrichData(raw) {
-  const game_days = raw.game_days.map(calcGameDay);
-  const overall = recalcOverall(raw.game_days);
-  return { game_days, overall };
+// Delete a file
+async function ghDeleteFile(path, sha, message) {
+  const r = await fetch(`${GH_BASE}/${path}`, {
+    method: 'DELETE',
+    headers: GH_HEADERS,
+    body: JSON.stringify({ message, sha }),
+  });
+  if (!r.ok) throw new Error(`GitHub DELETE failed: ${r.status} — ${await r.text()}`);
+}
+
+// Load all game days from GitHub (parallel)
+async function loadAllDays() {
+  const items = await ghListDays();
+  const results = await Promise.all(items.map(item => ghGetFile(item.path)));
+  return results.map(r => r.data);
+}
+
+function enrichData(game_days) {
+  return { game_days: game_days.map(calcGameDay), overall: recalcOverall(game_days) };
+}
+
+function cleanGameDay(game_day) {
+  return {
+    game_no: game_day.game_no,
+    date: game_day.date,
+    best_game: game_day.best_game || '',
+    games: (game_day.games || []).map(g => ({
+      game: g.game,
+      hori_kill: Number(g.hori_kill) || 0,
+      hori_damage: Number(g.hori_damage) || 0,
+      tami_kill: Number(g.tami_kill) || 0,
+      tami_damage: Number(g.tami_damage) || 0,
+      rank: Number(g.rank) || 0,
+    })),
+  };
 }
 
 export default async function handler(req, res) {
@@ -56,8 +111,8 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { data } = await ghGet();
-      return res.status(200).json(enrichData(data));
+      const game_days = await loadAllDays();
+      return res.status(200).json(enrichData(game_days));
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -66,33 +121,48 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { action, game_day } = req.body || {};
     try {
-      const { data, sha } = await ghGet();
+      const ts = new Date().toISOString();
 
       if (action === 'save_game_day') {
-        // strip computed fields before saving — store only static data
-        const clean = {
-          game_no: game_day.game_no,
-          date: game_day.date,
-          best_game: game_day.best_game || '',
-          games: (game_day.games || []).map(g => ({
-            game: g.game,
-            hori_kill: Number(g.hori_kill) || 0,
-            hori_damage: Number(g.hori_damage) || 0,
-            tami_kill: Number(g.tami_kill) || 0,
-            tami_damage: Number(g.tami_damage) || 0,
-            rank: Number(g.rank) || 0,
-          })),
-        };
-        const idx = data.game_days.findIndex(g => g.game_no === clean.game_no);
-        if (idx >= 0) data.game_days[idx] = clean;
-        else { data.game_days.push(clean); data.game_days.sort((a, b) => a.game_no - b.game_no); }
-        await ghPut(data, sha);
-        return res.status(200).json({ ok: true, overall: recalcOverall(data.game_days) });
+        const clean = cleanGameDay(game_day);
+        const filename = dayFilename(clean);
+        const filePath = `${GH_DAYS_DIR}/${filename}`;
+
+        // check if file exists (to get sha for update)
+        let existingSha = null;
+        try {
+          const existing = await ghGetFile(filePath);
+          existingSha = existing.sha;
+        } catch { /* new file */ }
+
+        // if date changed, the filename changes — find and delete old file by game_no
+        if (!existingSha) {
+          const items = await ghListDays();
+          for (const item of items) {
+            const { data, sha } = await ghGetFile(item.path);
+            if (data.game_no === clean.game_no && item.path !== filePath) {
+              await ghDeleteFile(item.path, sha, `stats: remove old day ${clean.game_no} file [${ts}]`);
+              break;
+            }
+          }
+        }
+
+        await ghPutFile(filePath, clean, existingSha, `stats: update day ${clean.game_no} [${ts}]`);
+
+        // recalc overall from all days
+        const all = await loadAllDays();
+        return res.status(200).json({ ok: true, overall: recalcOverall(all) });
       }
 
       if (action === 'delete_game_day') {
-        data.game_days = data.game_days.filter(g => g.game_no !== game_day.game_no);
-        await ghPut(data, sha);
+        const items = await ghListDays();
+        for (const item of items) {
+          const { data, sha } = await ghGetFile(item.path);
+          if (data.game_no === game_day.game_no) {
+            await ghDeleteFile(item.path, sha, `stats: delete day ${game_day.game_no} [${ts}]`);
+            break;
+          }
+        }
         return res.status(200).json({ ok: true });
       }
 
