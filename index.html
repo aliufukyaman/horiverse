@@ -160,7 +160,10 @@
           <li><a href="privacy_policy.html">Privacy Policy</a></li>
           <li><a href="terms_conditions.html">Terms &amp; Conditions</a></li>
         </ul>
-        <p class="copyright"><a href="#" id="copyright-link" onclick="openLoginModal(event)" data-i18n="footer_copy">&copy; 2026 Horiverse. All rights reserved.</a></p>
+        <p class="copyright">
+          <a href="#" id="copyright-link" onclick="openLoginModal(event,'admin')" data-i18n="footer_copy_1">&copy; 2026 Horiverse.</a>
+          <a href="#" id="rights-link" onclick="openLoginModal(event,'clash')" data-i18n="footer_copy_2">All rights reserved.</a>
+        </p>
       </div>
     </div>
   </footer>
@@ -181,8 +184,13 @@
   <!-- Custom JS -->
   <script src="assets/js/main.js"></script>
   <script>
-    function openLoginModal(e) {
+    // Which protected area to open after a successful login: 'admin' or 'clash'.
+    let loginTarget = 'admin';
+    function openLoginModal(e, target) {
       if (e) e.preventDefault();
+      loginTarget = target || 'admin';
+      document.getElementById('admin-modal-sub').textContent =
+        loginTarget === 'clash' ? 'Clash of Clans' : 'Admin Login';
       document.getElementById('admin-modal-overlay').style.display = 'flex';
       setTimeout(() => document.getElementById('admin-modal-user').focus(), 100);
     }
@@ -205,7 +213,7 @@
         });
         if (r.ok) {
           closeLoginModal();
-          window.location.href = '/admin.html';
+          window.location.href = loginTarget === 'clash' ? '/clash.html' : '/admin.html';
         } else {
           err.style.display = 'block';
         }

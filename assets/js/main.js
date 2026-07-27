@@ -21,7 +21,8 @@ const TRANSLATIONS = {
     contact_sub:   'Have questions? We\'d love to hear from you!',
     get_in_touch:  'Get In Touch',
     contact_p1:    'Send us an email or follow us on social media to stay updated with our latest games and news.',
-    footer_copy:   '© 2026 Horiverse. All rights reserved.',
+    footer_copy_1: '© 2026 Horiverse.',
+    footer_copy_2: 'All rights reserved.',
   },
   tr: {
     hero_title:    'Horiverse\'e Hoş Geldiniz',
@@ -42,7 +43,8 @@ const TRANSLATIONS = {
     contact_sub:   'Sorularınız mı var? Sizden haber almak isteriz!',
     get_in_touch:  'Bize Ulaşın',
     contact_p1:    'En son oyunlarımız ve haberlerimizden haberdar olmak için bize e-posta gönderin veya sosyal medyada takip edin.',
-    footer_copy:   '© 2026 Horiverse. Tüm hakları saklıdır.',
+    footer_copy_1: '© 2026 Horiverse.',
+    footer_copy_2: 'Tüm hakları saklıdır.',
   }
 };
 

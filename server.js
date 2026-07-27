@@ -12,10 +12,12 @@ app.use(express.static('.'));
 import loginHandler from './api/login.js';
 import logoutHandler from './api/logout.js';
 import statsHandler from './api/stats.local.js';
+import cocHandler from './api/coc.js';
 
 app.post('/api/login', (req, res) => loginHandler(req, res));
 app.post('/api/logout', (req, res) => logoutHandler(req, res));
 app.get('/api/stats', (req, res) => statsHandler(req, res));
 app.post('/api/stats', (req, res) => statsHandler(req, res));
+app.get('/api/coc', (req, res) => cocHandler(req, res));
 
 app.listen(3000, () => console.log('http://localhost:3000'));
