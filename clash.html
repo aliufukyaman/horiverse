@@ -94,9 +94,8 @@
     .ub-nums b{color:var(--text);font-weight:700;}
     .ub-thmax{color:var(--gold);}
     .ub-absmax{color:var(--faded);}       /* absolute max across all THs — faded/passive */
-    .ub-track{height:7px;border-radius:6px;background:var(--dark2);overflow:hidden;position:relative;}
-    .ub-beyond{position:absolute;top:0;bottom:0;right:0;background:rgba(255,255,255,.045);border-left:1px dashed var(--faded);} /* levels only reachable at higher THs (faded) */
-    .ub-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--gold-light));position:relative;}
+    .ub-track{height:8px;border-radius:6px;background:rgba(255,255,255,.13);overflow:hidden;} /* light track — visible on the dark blue card */
+    .ub-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--gold-light));}
     .ub-fill.done{background:linear-gradient(90deg,var(--green),#7ce8a6);}
     .ub-sub{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text-dim);margin-top:4px;}
     .ub-sub .done{color:var(--green);}
@@ -191,14 +190,13 @@ function renderError(msg){
 function upgradeBar(it){
   const cur=it.current, thMax=it.thMax, absMax=it.absMax;
   const known=thMax!=null;
-  const denom=absMax>0?absMax:(thMax||cur||1);           // whole track = absolute max
-  const fillPct=Math.min(100,Math.round(cur/denom*100)); // progress toward absolute max
-  const capPct=(known&&absMax>0)?Math.min(100,Math.round(thMax/absMax*100)):100; // your TH cap position
-  // numbers:  cur / (thMax–absMax)   (absMax faded); at max TH the range collapses
+  const denom=known?(thMax||1):(absMax||cur||1);          // TH-based: bar fills toward the TH cap only
+  const fillPct=Math.min(100,Math.round(cur/denom*100));
+  // numbers:  current/(thMax–absMax)  — absMax grey, shown only when above the TH cap
   let nums;
   if(!known) nums=`<b>${cur}</b>/(<span class="ub-thmax">?</span><span class="ub-absmax">–${absMax}</span>)`;
-  else if(thMax>=absMax) nums=`<b>${cur}</b>/<span class="ub-thmax">${thMax}</span>`;
-  else nums=`<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span><span class="ub-absmax">–${absMax}</span>)`;
+  else if(absMax>thMax) nums=`<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span><span class="ub-absmax">–${absMax}</span>)`;
+  else nums=`<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span>)`;
   const done=it.maxed;
   let right;
   if(done) right=`<span class="done">✓ maxed for TH</span>`;
@@ -207,7 +205,7 @@ function upgradeBar(it){
   else right=`<span class="${it.timeKnown?'':'approx'}">${it.remLevels} lvl → ${fmtDur(it.remHours,!it.timeKnown)}</span>`;
   return `<div class="ub">
     <div class="ub-top"><span class="ub-name">${esc(it.name)}${it.missing?' *':''}</span><span class="ub-nums">${nums}</span></div>
-    <div class="ub-track">${capPct<100?`<div class="ub-beyond" style="left:${capPct}%"></div>`:''}<div class="ub-fill ${done?'done':''}" style="width:${fillPct}%"></div></div>
+    <div class="ub-track"><div class="ub-fill ${done?'done':''}" style="width:${fillPct}%"></div></div>
     <div class="ub-sub"><span></span>${right}</div>
   </div>`;
 }
@@ -261,7 +259,7 @@ function renderVillage(v){
   }).join('');
 
   html+=`<div class="note">
-    <b>How to read:</b> <b style="color:var(--gold)">current</b> / (<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all TH</span>). The bar fills toward your TH cap; the dashed line marks that cap within the absolute max.
+    <b>How to read:</b> <b style="color:var(--gold)">current</b>/(<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all THs</span>). The bar is <b>TH-based</b> — it fills toward your current town hall's cap only; the grey number is the absolute max across all THs, shown for reference.
     Times sum each level's in-game upgrade hours; <span class="approx" style="color:var(--gold-light)">≈</span> means the newest levels were estimated (game data lags the latest update). Items marked * aren't in the game-data set yet. Hero equipment is ore-based, so it has no time. Buildings aren't shown — Supercell's API doesn't expose building levels.
   </div>`;
   return html;
