@@ -38,7 +38,7 @@ async function fetchVillage(v) {
   }
 
   try {
-    const enriched = await enrichPlayer(player);
+    const enriched = await enrichPlayer(player, v.key);
     return { ...base, source, note, playerName: player.name, ...enriched };
   } catch (e) {
     return { ...base, source: 'error', error: `Enrichment failed: ${e.message}` };

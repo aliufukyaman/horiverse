@@ -190,10 +190,11 @@ function renderError(msg){
 const seg = n => (n && n<=30) ? `<div class="ub-seg" style="--n:${n}"></div>` : '';
 
 // Renders one unit row. Three kinds:
-//   future  → not unlocked at this TH yet (passive/greyed, shows unlock TH)
-//   ref     → building/trap/wall (no live level in the API; shows max at this TH)
-//   live    → player-tracked: current/(thMax–absMax) with a notched fill
-function renderItem(it, live){
+//   future    → not unlocked at this TH yet (passive/greyed, shows unlock TH)
+//   target    → available but no current level known (buildings without a set
+//               level): empty bar + max target, clearly NOT maxed
+//   tracked   → current/(thMax–absMax) with a notched, TH-based fill
+function renderItem(it){
   if(it.future){
     return `<div class="ub future">
       <div class="ub-top"><span class="ub-name">${esc(it.name)}</span><span class="ub-nums">max ${it.absMax}</span></div>
@@ -201,17 +202,17 @@ function renderItem(it, live){
       <div class="ub-sub"><span></span><span><i class="fas fa-lock"></i> unlocks at TH${it.unlockTH}</span></div>
     </div>`;
   }
-  if(!live){ // building/trap/wall reference — no per-account current level
+  if(!it.tracked){ // available target, current level not known (set it in coc-village-levels.json)
     const nums = it.absMax>it.thMax
       ? `<span class="ub-thmax">${it.thMax}</span><span class="ub-absmax"> (${it.absMax})</span>`
       : `<span class="ub-thmax">${it.thMax}</span>`;
     return `<div class="ub ref">
       <div class="ub-top"><span class="ub-name">${esc(it.name)}</span><span class="ub-nums">max ${nums}</span></div>
-      <div class="ub-track"><div class="ub-fill ref" style="width:100%"></div>${seg(it.thMax)}</div>
-      <div class="ub-sub"><span></span><span>max level at TH</span></div>
+      <div class="ub-track">${seg(it.thMax)}</div>
+      <div class="ub-sub"><span></span><span>target · set your level</span></div>
     </div>`;
   }
-  // live tracked unit — current/(thMax–absMax), notched TH-based fill
+  // tracked unit — current/(thMax–absMax), notched TH-based fill
   const cur=it.current, thMax=it.thMax, absMax=it.absMax;
   const fillPct=thMax>0?Math.min(100,Math.round(cur/thMax*100)):0;
   const nums = absMax>thMax
@@ -248,35 +249,39 @@ function renderVillage(v){
     </div>
   </div>`;
 
-  // Summary — maxed progress per live (player-tracked) category with units available now
+  // Summary — maxed progress for every category that has tracked units
   const cats=v.categories||[];
-  const live=cats.filter(c=>c.live && c.count>0);
-  const tiles=live.map(c=>{
+  const summ=cats.filter(c=>c.count>0);
+  const tiles=summ.map(c=>{
     const all=c.maxedCount===c.count;
     return `<div class="sum-tile ${all?'done':''}"><span>${esc(c.label)}</span><b>${c.maxedCount}/${c.count}</b><small>maxed for TH</small></div>`;
   }).join('');
-  const totMax=live.reduce((s,c)=>s+c.maxedCount,0), totN=live.reduce((s,c)=>s+c.count,0);
+  const totMax=summ.reduce((s,c)=>s+c.maxedCount,0), totN=summ.reduce((s,c)=>s+c.count,0);
   html+=`<div class="summary">
     <div class="sum-title"><i class="fas fa-gauge-high"></i> TH${h.townHallLevel} progress — maxed per category</div>
     <div class="sum-tiles">${tiles}
-      <div class="sum-tile total ${totMax===totN?'done':''}"><span>Total</span><b>${totMax}/${totN}</b><small>units maxed</small></div>
+      <div class="sum-tile total ${totN>0&&totMax===totN?'done':''}"><span>Total</span><b>${totMax}/${totN}</b><small>units maxed</small></div>
     </div>
   </div>`;
 
   // Category sections (stacked, full width) — every group renders bars, in file (game) order
   html+=cats.map(c=>{
-    const meta = c.live
-      ? (c.count>0 ? `${c.maxedCount}/${c.count} maxed for TH` : `unlocks at a higher TH`)
-      : `${c.count} available · max level at your TH`;
+    const avail=c.items.filter(i=>!i.future);
+    const targets=avail.filter(i=>!i.tracked).length;
+    let meta;
+    if(c.count>0 && targets) meta=`${c.maxedCount}/${c.count} maxed · ${targets} not set`;
+    else if(c.count>0) meta=`${c.maxedCount}/${c.count} maxed for TH`;
+    else if(targets) meta=`${targets} targets · set your levels`;
+    else meta=`unlocks at a higher TH`;
     return `<div class="cat">
       <div class="cat-head"><i class="fas ${esc(c.icon)}"></i> ${esc(c.label)} <span class="cat-meta">${meta}</span></div>
-      <div class="cat-bars">${c.items.map(it=>renderItem(it, c.live)).join('')}</div>
+      <div class="cat-bars">${c.items.map(renderItem).join('')}</div>
     </div>`;
   }).join('');
 
   html+=`<div class="note">
-    <b>How to read:</b> <b style="color:var(--gold)">current</b>/(<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all THs</span>). Bars are <b>TH-based</b> and <b>notched per level</b> — count the empty notches to see how many upgrades remain for your TH. Faded rows are units that <b>unlock at a higher TH</b>.
-    <b>Defenses / Traps / Walls / Resources / Army buildings</b> show the max level at your TH only — Supercell's API doesn't expose per-account building levels, so their bars are a reference, not live progress. Max levels come from clash.ninja; edit <b>api/coc-game-data.json</b> to adjust or hide anything.
+    <b>How to read:</b> <b style="color:var(--gold)">current</b>/(<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all THs</span>). Bars are <b>TH-based</b> and <b>notched per level</b> — count the empty notches to see how many upgrades remain. Faded rows <b>unlock at a higher TH</b>.
+    <b>Defenses / Traps / Walls / Resources / Army buildings</b> aren't in Supercell's API, so they start as <b>targets</b> (max level at your TH, not filled). To track them, put your current levels in <b>api/coc-village-levels.json</b> and they'll get real progress bars. Max levels come from clash.ninja (<b>api/coc-game-data.json</b>).
   </div>`;
   return html;
 }

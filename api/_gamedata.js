@@ -25,6 +25,13 @@ try {
   GD_ERROR = `api/coc-game-data.json could not be read — ${e.message}`;
 }
 
+// Optional manual current levels for buildings/traps/walls/etc. (the CoC API does
+// not expose them). Keyed by village → item name → level. Missing = show as target.
+let VILLAGE_LEVELS = {};
+try {
+  VILLAGE_LEVELS = JSON.parse(readFileSync(new URL('./coc-village-levels.json', import.meta.url), 'utf-8'));
+} catch { VILLAGE_LEVELS = {}; }
+
 const ICONS = {
   troops: 'fa-dragon', darktroops: 'fa-skull', spells: 'fa-wand-sparkles',
   siegemachines: 'fa-truck-monster', heroes: 'fa-crown', pets: 'fa-paw',
@@ -52,35 +59,35 @@ function itemThMax(table, playerTH) {
 function itemAbsMax(table) { let m = 0; for (const th in table) m = Math.max(m, table[th]); return m; }
 function itemUnlockTH(table) { let m = Infinity; for (const th in table) m = Math.min(m, Number(th)); return isFinite(m) ? m : null; }
 
-export function enrichPlayer(player) {
+export function enrichPlayer(player, villageKey) {
   if (GD_ERROR) throw new Error(GD_ERROR);
   const playerTH = Number(player.townHallLevel) || GD.maxTownHall || 17;
   const cur = currentLevels(player);
+  const manual = (VILLAGE_LEVELS && VILLAGE_LEVELS[villageKey]) || {};
 
-  // Items are kept in file order (the game's real order). Units not yet
-  // available at the player's TH are included as passive "future" entries.
+  // File order (the game's real order); not-yet-unlocked units are passive "future".
+  // Army/heroes/spells/pets get their current level from the live API. Buildings/
+  // traps/walls/etc. have no level in the API, so current comes from the optional
+  // api/coc-village-levels.json — without an entry they render as a TH target.
   const categories = (GD.groups || []).map(g => {
     const items = [];
-    let availCount = 0, maxedCount = 0;
+    let trackedCount = 0, maxedCount = 0;
     for (const name in g.items) {
       const table = g.items[name];
       const absMax = itemAbsMax(table);
       const thMaxRaw = itemThMax(table, playerTH);
       if (thMaxRaw == null) {                          // not unlocked at this TH yet → passive
-        items.push({ name, future: true, unlockTH: itemUnlockTH(table), absMax, current: g.live ? 0 : null });
+        items.push({ name, future: true, unlockTH: itemUnlockTH(table), absMax, current: null, tracked: false });
         continue;
       }
-      availCount++;
-      if (g.live) {
-        const current = cur[name] ?? 0;
-        const maxed = current >= thMaxRaw;
-        if (maxed) maxedCount++;
-        items.push({ name, current, thMax: Math.max(thMaxRaw, current), absMax, maxed, future: false });
-      } else {
-        items.push({ name, current: null, thMax: thMaxRaw, absMax, ref: true, future: false });
-      }
+      let current = null, tracked = false;
+      if (g.live) { current = cur[name] ?? 0; tracked = true; }
+      else if (typeof manual[name] === 'number') { current = manual[name]; tracked = true; } // building with a set level
+      const maxed = tracked && current >= thMaxRaw;
+      if (tracked) { trackedCount++; if (maxed) maxedCount++; }
+      items.push({ name, current, thMax: tracked ? Math.max(thMaxRaw, current) : thMaxRaw, absMax, maxed, tracked, future: false });
     }
-    return { key: g.key, label: g.label, icon: ICONS[g.key] || 'fa-cube', live: !!g.live, count: availCount, maxedCount, items };
+    return { key: g.key, label: g.label, icon: ICONS[g.key] || 'fa-cube', live: !!g.live, count: trackedCount, maxedCount, items };
   }).filter(c => c.items.length > 0);
 
   const lt = player.leagueTier || player.league || player.builderBaseLeague || null;
