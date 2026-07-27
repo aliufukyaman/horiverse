@@ -99,7 +99,13 @@
     .ub-fill.done{background:linear-gradient(90deg,var(--green),#7ce8a6);}
     .ub-sub{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text-dim);margin-top:4px;}
     .ub-sub .done{color:var(--green);}
-    .ub-sub .approx{color:var(--gold-light);}
+
+    /* BUILDING/TRAP/WALL REFERENCE (no live current level) */
+    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
+    .ref-item{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+    .ref-item .rn{font-size:.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ref-item .rv{font-size:.9rem;font-weight:700;color:var(--gold);white-space:nowrap;}
+    .ref-item .rv .ub-absmax{font-weight:400;}
 
     .note{font-size:.72rem;color:var(--faded);line-height:1.6;margin-top:6px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;}
     .note b{color:var(--text-dim);}
@@ -164,12 +170,6 @@ async function boot(){
 // ── HELPERS ─────────────────────────────────────────────
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtInt=n=>(typeof n==='number'&&isFinite(n))?n.toLocaleString('en-US'):esc(n);
-function fmtDur(hours, approx){
-  if(!hours||hours<=0) return approx?'≈ 0d':'0d';
-  const days=hours/24, pre=approx?'≈ ':'';
-  if(days>=1) return pre+Math.round(days).toLocaleString('en-US')+'d';
-  return pre+Math.round(hours)+'h';
-}
 
 // ── RENDER ──────────────────────────────────────────────
 let TABS=[];
@@ -187,27 +187,29 @@ function renderError(msg){
   document.getElementById('panes').innerHTML=`<div class="banner error"><i class="fas fa-triangle-exclamation"></i>${esc(msg)}</div>`;
 }
 
+// current/(thMax–absMax) — TH-based bar, absMax grey and only when above the cap.
 function upgradeBar(it){
   const cur=it.current, thMax=it.thMax, absMax=it.absMax;
-  const known=thMax!=null;
-  const denom=known?(thMax||1):(absMax||cur||1);          // TH-based: bar fills toward the TH cap only
-  const fillPct=Math.min(100,Math.round(cur/denom*100));
-  // numbers:  current/(thMax–absMax)  — absMax grey, shown only when above the TH cap
-  let nums;
-  if(!known) nums=`<b>${cur}</b>/(<span class="ub-thmax">?</span><span class="ub-absmax">–${absMax}</span>)`;
-  else if(absMax>thMax) nums=`<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span><span class="ub-absmax">–${absMax}</span>)`;
-  else nums=`<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span>)`;
-  const done=it.maxed;
-  let right;
-  if(done) right=`<span class="done">✓ maxed for TH</span>`;
-  else if(!known) right=`<span>cap n/a</span>`;
-  else if(it.remHours==null) right=`<span>${it.remLevels} lvl${it.remLevels===1?'':'s'} left</span>`;
-  else right=`<span class="${it.timeKnown?'':'approx'}">${it.remLevels} lvl → ${fmtDur(it.remHours,!it.timeKnown)}</span>`;
+  const fillPct=thMax>0?Math.min(100,Math.round(cur/thMax*100)):0;
+  const nums = absMax>thMax
+    ? `<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span><span class="ub-absmax">–${absMax}</span>)`
+    : `<b>${cur}</b>/(<span class="ub-thmax">${thMax}</span>)`;
+  const rem=Math.max(0,thMax-cur);
+  const right = it.maxed ? `<span class="done">✓ maxed for TH</span>` : `<span>${rem} lvl${rem===1?'':'s'} left</span>`;
   return `<div class="ub">
-    <div class="ub-top"><span class="ub-name">${esc(it.name)}${it.missing?' *':''}</span><span class="ub-nums">${nums}</span></div>
-    <div class="ub-track"><div class="ub-fill ${done?'done':''}" style="width:${fillPct}%"></div></div>
+    <div class="ub-top"><span class="ub-name">${esc(it.name)}</span><span class="ub-nums">${nums}</span></div>
+    <div class="ub-track"><div class="ub-fill ${it.maxed?'done':''}" style="width:${fillPct}%"></div></div>
     <div class="ub-sub"><span></span>${right}</div>
   </div>`;
+}
+
+// Building/trap/wall reference row: max level at this TH (absMax grey). No live
+// current level — the CoC API doesn't expose per-account building levels.
+function refItem(it){
+  const val = it.absMax>it.thMax
+    ? `<span class="rv">${it.thMax}<span class="ub-absmax"> (${it.absMax})</span></span>`
+    : `<span class="rv">${it.thMax}</span>`;
+  return `<div class="ref-item"><span class="rn">${esc(it.name)}</span>${val}</div>`;
 }
 
 function renderVillage(v){
@@ -232,35 +234,36 @@ function renderVillage(v){
     </div>
   </div>`;
 
-  // Summary — time to max this TH, per category
+  // Summary — maxed progress per live (player-tracked) category
   const cats=v.categories||[];
-  const tiles=cats.map(c=>{
-    if(!c.hasTime) return `<div class="sum-tile ${c.maxedCount===c.count?'done':''}"><span>${esc(c.label)}</span><b>${c.maxedCount}/${c.count}</b><small>ore-based</small></div>`;
-    const allDone=c.maxedCount===c.count;
-    return `<div class="sum-tile ${allDone?'done':''}" title="${fmtInt(c.totalHours)} h"><span>${esc(c.label)}</span><b>${allDone?'✓':fmtDur(c.totalHours,!c.timeComplete)}</b><small>${c.maxedCount}/${c.count} maxed</small></div>`;
+  const live=cats.filter(c=>c.live);
+  const tiles=live.map(c=>{
+    const all=c.maxedCount===c.count;
+    return `<div class="sum-tile ${all?'done':''}"><span>${esc(c.label)}</span><b>${c.maxedCount}/${c.count}</b><small>maxed for TH</small></div>`;
   }).join('');
-  const gt=(v.totals&&v.totals.grandHours)||0; const gComplete=v.totals&&v.totals.grandComplete;
+  const totMax=live.reduce((s,c)=>s+c.maxedCount,0), totN=live.reduce((s,c)=>s+c.count,0);
   html+=`<div class="summary">
-    <div class="sum-title"><i class="fas fa-gauge-high"></i> Time to max TH${h.townHallLevel} — by category</div>
+    <div class="sum-title"><i class="fas fa-gauge-high"></i> TH${h.townHallLevel} progress — maxed per category</div>
     <div class="sum-tiles">${tiles}
-      <div class="sum-tile total" title="${fmtInt(gt)} h"><span>Total</span><b>${fmtDur(gt,!gComplete)}</b><small>time-based only</small></div>
+      <div class="sum-tile total ${totMax===totN?'done':''}"><span>Total</span><b>${totMax}/${totN}</b><small>units maxed</small></div>
     </div>
   </div>`;
 
   // Category sections (stacked, full width)
   html+=cats.map(c=>{
-    const meta=c.hasTime
-      ? `${c.maxedCount}/${c.count} maxed · ${c.maxedCount===c.count?'done':fmtDur(c.totalHours,!c.timeComplete)+' left'}`
-      : `${c.maxedCount}/${c.count} maxed · ore-based`;
+    const meta = c.live ? `${c.maxedCount}/${c.count} maxed for TH` : `${c.count} items · max level at your TH`;
+    const body = c.live
+      ? `<div class="cat-bars">${c.items.map(upgradeBar).join('')}</div>`
+      : `<div class="ref-grid">${c.items.map(refItem).join('')}</div>`;
     return `<div class="cat">
       <div class="cat-head"><i class="fas ${esc(c.icon)}"></i> ${esc(c.label)} <span class="cat-meta">${meta}</span></div>
-      <div class="cat-bars">${c.items.map(upgradeBar).join('')}</div>
+      ${body}
     </div>`;
   }).join('');
 
   html+=`<div class="note">
-    <b>How to read:</b> <b style="color:var(--gold)">current</b>/(<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all THs</span>). The bar is <b>TH-based</b> — it fills toward your current town hall's cap only; the grey number is the absolute max across all THs, shown for reference.
-    Times sum each level's in-game upgrade hours; <span class="approx" style="color:var(--gold-light)">≈</span> means the newest levels were estimated (game data lags the latest update). Items marked * aren't in the game-data set yet. Hero equipment is ore-based, so it has no time. Buildings aren't shown — Supercell's API doesn't expose building levels.
+    <b>How to read:</b> <b style="color:var(--gold)">current</b>/(<b style="color:var(--gold)">this-TH max</b><span class="ub-absmax">–max across all THs</span>). Bars are <b>TH-based</b> — they fill toward your town hall's cap; the grey number is the max across all THs, for reference.
+    <b>Defenses / Traps / Walls / Resources / Army buildings</b> show only the max level at your TH (targets) — Supercell's API doesn't expose per-account building levels, so they can't be tracked live. Max levels come from clash.ninja; edit <b>api/coc-game-data.json</b> to adjust or hide anything.
   </div>`;
   return html;
 }
