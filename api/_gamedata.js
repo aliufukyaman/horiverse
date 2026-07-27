@@ -50,29 +50,38 @@ function itemThMax(table, playerTH) {
   return best; // null → not available at/under this TH
 }
 function itemAbsMax(table) { let m = 0; for (const th in table) m = Math.max(m, table[th]); return m; }
+function itemUnlockTH(table) { let m = Infinity; for (const th in table) m = Math.min(m, Number(th)); return isFinite(m) ? m : null; }
 
 export function enrichPlayer(player) {
   if (GD_ERROR) throw new Error(GD_ERROR);
   const playerTH = Number(player.townHallLevel) || GD.maxTownHall || 17;
   const cur = currentLevels(player);
 
+  // Items are kept in file order (the game's real order). Units not yet
+  // available at the player's TH are included as passive "future" entries.
   const categories = (GD.groups || []).map(g => {
     const items = [];
+    let availCount = 0, maxedCount = 0;
     for (const name in g.items) {
-      const thMaxRaw = itemThMax(g.items[name], playerTH);
-      if (thMaxRaw == null) continue;                 // unit not available at this TH → skip
-      const absMax = itemAbsMax(g.items[name]);
+      const table = g.items[name];
+      const absMax = itemAbsMax(table);
+      const thMaxRaw = itemThMax(table, playerTH);
+      if (thMaxRaw == null) {                          // not unlocked at this TH yet → passive
+        items.push({ name, future: true, unlockTH: itemUnlockTH(table), absMax, current: g.live ? 0 : null });
+        continue;
+      }
+      availCount++;
       if (g.live) {
         const current = cur[name] ?? 0;
-        items.push({ name, current, thMax: Math.max(thMaxRaw, current), absMax, maxed: current >= thMaxRaw });
+        const maxed = current >= thMaxRaw;
+        if (maxed) maxedCount++;
+        items.push({ name, current, thMax: Math.max(thMaxRaw, current), absMax, maxed, future: false });
       } else {
-        items.push({ name, current: null, thMax: thMaxRaw, absMax, maxed: false });
+        items.push({ name, current: null, thMax: thMaxRaw, absMax, ref: true, future: false });
       }
     }
-    if (g.live) items.sort((a, b) => (a.maxed - b.maxed) || ((b.thMax - b.current) - (a.thMax - a.current)) || a.name.localeCompare(b.name));
-    const maxedCount = g.live ? items.filter(i => i.maxed).length : 0;
-    return { key: g.key, label: g.label, icon: ICONS[g.key] || 'fa-cube', live: !!g.live, count: items.length, maxedCount, items };
-  }).filter(c => c.count > 0);
+    return { key: g.key, label: g.label, icon: ICONS[g.key] || 'fa-cube', live: !!g.live, count: availCount, maxedCount, items };
+  }).filter(c => c.items.length > 0);
 
   const lt = player.leagueTier || player.league || player.builderBaseLeague || null;
   const header = {
