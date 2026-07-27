@@ -1,5 +1,6 @@
 import { jwtVerify } from 'jose';
 import { VILLAGES, normTag, sampleVillage } from './_villages.js';
+import { enrichPlayer } from './_gamedata.js';
 
 const SECRET   = new TextEncoder().encode(process.env.JWT_SECRET || 'horiverse-fallback-secret-32chars!!');
 // Default: ClashKing's public no-auth passthrough to the official CoC API — works from any IP (incl. Vercel).
@@ -20,20 +21,27 @@ async function fetchVillage(v) {
   const tag = normTag(v.tag);
   const base = { key: v.key, name: v.name, tag: tag ? `#${tag}` : '', resource: RESOURCE };
 
-  // No tag configured → labelled sample data so the UI still renders.
+  let player, source, note;
   if (!tag) {
-    return { ...base, source: 'sample', note: `No tag set for ${v.key} — showing sample data.`, data: sampleVillage(v) };
+    player = sampleVillage(v); source = 'sample'; note = `No tag set for ${v.key} — showing sample data.`;
+  } else {
+    try {
+      const headers = { Accept: 'application/json' };
+      if (COC_TOKEN) headers.Authorization = `Bearer ${COC_TOKEN}`; // only needed for authed proxies
+      const r = await fetch(`${COC_BASE}/${RESOURCE}/%23${tag}`, { headers });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) return { ...base, source: 'error', error: `CoC API ${r.status}: ${body.reason || body.message || body.detail || 'request failed'}` };
+      player = body; source = 'live';
+    } catch (e) {
+      return { ...base, source: 'error', error: e.message };
+    }
   }
 
   try {
-    const headers = { Accept: 'application/json' };
-    if (COC_TOKEN) headers.Authorization = `Bearer ${COC_TOKEN}`;   // only needed for authed proxies/official API
-    const r = await fetch(`${COC_BASE}/${RESOURCE}/%23${tag}`, { headers });
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) return { ...base, source: 'error', error: `CoC API ${r.status}: ${body.reason || body.message || body.detail || 'request failed'}` };
-    return { ...base, source: 'live', data: body };
+    const enriched = await enrichPlayer(player);
+    return { ...base, source, note, playerName: player.name, ...enriched };
   } catch (e) {
-    return { ...base, source: 'error', error: e.message };
+    return { ...base, source: 'error', error: `Enrichment failed: ${e.message}` };
   }
 }
 
